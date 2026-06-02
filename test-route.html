@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Route System</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Route System Test Page</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Pass Selection</h2>
+        <button onclick="testPassSelection()">Set Test Pass</button>
+        <button onclick="clearPassSelection()">Clear Pass</button>
+        <div id="passStatus"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Distance Calculation</h2>
+        <input type="text" id="testOrigin" placeholder="Origin" value="Santosh Nagar">
+        <input type="text" id="testDestination" placeholder="Destination" value="Colony Kumarwadi">
+        <button onclick="testDistanceCalculation()">Calculate Distance</button>
+        <div id="distanceResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test localStorage</h2>
+        <button onclick="showLocalStorage()">Show localStorage</button>
+        <div id="localStorageContent"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Navigation</h2>
+        <a href="/dashboard">Go to Dashboard</a> | 
+        <a href="/route">Go to Route Page</a> | 
+        <a href="/">Go to Home</a>
+    </div>
+
+    <script>
+        function testPassSelection() {
+            localStorage.setItem('selectedPass', 'Daily Pass');
+            localStorage.setItem('selectedPrice', '₹25');
+            localStorage.setItem('selectedDuration', '1 day');
+            
+            document.getElementById('passStatus').innerHTML = 
+                '<span class="success">✅ Test pass set: Daily Pass - ₹25</span>';
+        }
+        
+        function clearPassSelection() {
+            localStorage.removeItem('selectedPass');
+            localStorage.removeItem('selectedPrice');
+            localStorage.removeItem('selectedDuration');
+            
+            document.getElementById('passStatus').innerHTML = 
+                '<span class="info">🗑️ Pass selection cleared</span>';
+        }
+        
+        function testDistanceCalculation() {
+            const origin = document.getElementById('testOrigin').value;
+            const destination = document.getElementById('testDestination').value;
+            const resultDiv = document.getElementById('distanceResult');
+            
+            resultDiv.innerHTML = '<span class="info">🔄 Calculating...</span>';
+            
+            fetch('/calculate-distance-realtime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    origin: origin,
+                    destination: destination
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Success!</span><br>
+                        Distance: ${data.distance_km} km<br>
+                        Fare: ₹${data.fare}<br>
+                        Travel Time: ${data.travel_time_minutes} minutes<br>
+                        Method: ${data.calculation_method}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error}</span>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<span class="error">❌ Network Error: ${error.message}</span>`;
+            });
+        }
+        
+        function showLocalStorage() {
+            const content = document.getElementById('localStorageContent');
+            let html = '<h3>localStorage Contents:</h3>';
+            
+            if (localStorage.length === 0) {
+                html += '<p>No items in localStorage</p>';
+            } else {
+                html += '<ul>';
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    html += `<li><strong>${key}:</strong> ${value}</li>`;
+                }
+                html += '</ul>';
+            }
+            
+            content.innerHTML = html;
+        }
+        
+        // Auto-show localStorage on page load
+        window.onload = function() {
+            showLocalStorage();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Successful - Smart Bus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 500px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+      text-align: center;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 40px 30px;
+    }
+    
+    .success-icon {
+      font-size: 4em;
+      margin-bottom: 20px;
+      animation: bounce 1s ease-in-out;
+    }
+    
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+    
+    .content {
+      padding: 40px 30px;
+    }
+    
+    .receipt {
+      background: #f8f9fa;
+      border: 2px solid #4CAF50;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h1>Payment Successful!</h1>
+      <p>Your Smart Bus pass is now active</p>
+    </div>
+    
+    <div class="content">
+      <div class="receipt" id="receiptDetails">
+        <h3><i class="fas fa-receipt"></i> Payment Receipt</h3>
+        <p><strong>Receipt #:</strong> <span id="receiptNumber">Loading...</span></p>
+        <p><strong>Pass Type:</strong> <span id="passType">Loading...</span></p>
+        <p><strong>Amount:</strong> ₹<span id="amount">Loading...</span></p>
+        <p><strong>Email:</strong> <span id="emailAddress">Loading...</span></p>
+        <p><strong>UPI ID:</strong> 8340927497@ibl</p>
+        <p><strong>Merchant:</strong> Lingam Manoj Kumar</p>
+        <p><strong>Date:</strong> <span id="paymentDate">Loading...</span></p>
+        <p><strong>Status:</strong> <span style="color: #4CAF50; font-weight: bold;">COMPLETED</span></p>
+      </div>
+      
+      <div style="margin: 30px 0;">
+        <a href="/dashboard" class="btn">
+          <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+        </a>
+        
+        <a href="/passes" class="btn btn-secondary">
+          <i class="fas fa-ticket-alt"></i> View My Passes
+        </a>
+      </div>
+      
+      <div style="background: #e8f5e8; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <h4><i class="fas fa-info-circle"></i> What's Next?</h4>
+        <p>✅ Your bus pass is now active and ready to use</p>
+        <p>📧 Receipt has been sent to your email</p>
+        <p>📱 Show your pass to the bus conductor when boarding</p>
+        <p>🎫 Pass details are available in your dashboard</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSuccessData();
+    });
+
+    function loadSuccessData() {
+      // Get payment success data
+      const successData = localStorage.getItem('paymentSuccess');
+      
+      if (successData) {
+        const data = JSON.parse(successData);
+        const email = data.email_address || data.user_email || localStorage.getItem('userEmail') || 'Not available';
+        
+        // Update receipt details
+        document.getElementById('receiptNumber').textContent = data.transaction_id || `SB${Date.now()}`;
+        document.getElementById('passType').textContent = data.pass_type || 'Smart Bus Pass';
+        document.getElementById('amount').textContent = data.amount || '50';
+        document.getElementById('paymentDate').textContent = new Date().toLocaleDateString();
+        document.getElementById('emailAddress').textContent = email;
+        
+        // Add to user passes
+        const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+        const newPass = {
+          id: Date.now(),
+          type: data.pass_type || 'Smart Bus Pass',
+          price: `₹${data.amount || '50'}`,
+          route: data.route || 'City Transportation',
+          purchaseDate: new Date().toISOString(),
+          expiryDate: calculateExpiryDate(data.pass_type || 'Daily Pass'),
+          status: 'active',
+          paymentMethod: 'UPI (Real-time)',
+          receiptNumber: data.transaction_id || `SB${Date.now()}`,
+          merchantUPI: '8340927497@ibl',
+          merchantName: 'Lingam Manoj Kumar',
+          transactionId: data.transaction_id || `TXN${Date.now()}`,
+          realPayment: true
+        };
+        
+        userPasses.push(newPass);
+        localStorage.setItem('userPasses', JSON.stringify(userPasses));
+        
+        // Add success notification
+        const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+        notifications.unshift({
+          id: Date.now(),
+          type: 'success',
+          title: 'Payment Successful',
+          message: `Your ${data.pass_type || 'Smart Bus Pass'} payment of ₹${data.amount || '50'} has been processed successfully!`,
+          date: new Date().toISOString(),
+          read: false
+        });
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        
+        // Clear success data
+        localStorage.removeItem('paymentSuccess');
+        
+      } else {
+        // Fallback data
+        const fallbackEmail = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || 'Not available';
+        document.getElementById('receiptNumber').textContent = `SB${Date.now()}`;
+        document.getElementById('passType').textContent = 'Smart Bus Pass';
+        document.getElementById('amount').textContent = '50';
+        document.getElementById('emailAddress').textContent = fallbackEmail;
+        document.getElementById('paymentDate').textContent = new Date().toLocaleDateString();
+      }
+    }
+
+    function calculateExpiryDate(passType) {
+      const now = new Date();
+      const expiry = new Date(now);
+      
+      if (passType.includes('Daily')) {
+        expiry.setDate(now.getDate() + 1);
+      } else if (passType.includes('Weekly')) {
+        expiry.setDate(now.getDate() + 7);
+      } else if (passType.includes('Monthly')) {
+        expiry.setDate(now.getDate() + 30);
+      } else if (passType.includes('Annual')) {
+        expiry.setDate(now.getDate() + 365);
+      } else {
+        expiry.setDate(now.getDate() + 1);
+      }
+      
+      return expiry.toISOString();
+    }
+  </script>
+</body>
+</html>

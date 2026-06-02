@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Complete Smart Bus Flow Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Setup Test Data</h2>
+        <button onclick="setupTestData()">Setup Test User & Pass</button>
+        <div id="setupResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Pass Selection</h2>
+        <button onclick="testPassSelection()">Simulate Pass Selection</button>
+        <div id="passResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Distance API</h2>
+        <button onclick="testDistanceAPI()">Test Distance Calculation</button>
+        <div id="distanceResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: View localStorage</h2>
+        <button onclick="showLocalStorage()">Show All localStorage Data</button>
+        <div id="localStorageResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 5: Test Navigation</h2>
+        <button onclick="goToRoute()">Go to Route Page</button>
+        <button onclick="goToDashboard()">Go to Dashboard</button>
+    </div>
+
+    <script>
+        function setupTestData() {
+            // Setup user data
+            localStorage.setItem('userName', 'Test User');
+            localStorage.setItem('userEmail', 'test@example.com');
+            
+            // Setup pass data
+            localStorage.setItem('selectedPass', 'Daily Pass');
+            localStorage.setItem('selectedPrice', '₹25');
+            localStorage.setItem('selectedDuration', '1 day');
+            
+            document.getElementById('setupResult').innerHTML = 
+                '<span class="success">✅ Test data setup complete!</span>';
+        }
+        
+        function testPassSelection() {
+            // Simulate the exact same function as dashboard
+            const passType = 'Weekly Pass';
+            const price = '₹150';
+            const duration = '7 days';
+            
+            console.log('🎫 TESTING: Selecting pass:', { passType, price, duration });
+            
+            localStorage.setItem('selectedPass', passType);
+            localStorage.setItem('selectedPrice', price);
+            localStorage.setItem('selectedDuration', duration);
+            
+            // Verify storage
+            const stored = {
+                selectedPass: localStorage.getItem('selectedPass'),
+                selectedPrice: localStorage.getItem('selectedPrice'),
+                selectedDuration: localStorage.getItem('selectedDuration')
+            };
+            
+            console.log('🎫 TESTING: Stored in localStorage:', stored);
+            
+            document.getElementById('passResult').innerHTML = `
+                <span class="success">✅ Pass selection test complete!</span><br>
+                <pre>${JSON.stringify(stored, null, 2)}</pre>
+            `;
+        }
+        
+        function testDistanceAPI() {
+            const resultDiv = document.getElementById('distanceResult');
+            resultDiv.innerHTML = '<span class="info">🔄 Testing distance API...</span>';
+            
+            fetch('/calculate-distance-realtime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    origin: 'Santosh Nagar',
+                    destination: 'Colony Kumarwadi'
+                })
+            })
+            .then(response => {
+                console.log('API Response Status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Response Data:', data);
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Distance API working!</span><br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ API Error:</span><br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('API Error:', error);
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Network Error: ${error.message}</span>
+                `;
+            });
+        }
+        
+        function showLocalStorage() {
+            const resultDiv = document.getElementById('localStorageResult');
+            const data = {};
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                data[key] = localStorage.getItem(key);
+            }
+            
+            resultDiv.innerHTML = `
+                <h3>localStorage Contents:</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+        
+        function goToRoute() {
+            window.location.href = '/route';
+        }
+        
+        function goToDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        // Auto-show localStorage on page load
+        window.onload = function() {
+            showLocalStorage();
+        };
+    </script>
+</body>
+</html>

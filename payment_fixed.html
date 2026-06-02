@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment - Smart Bus</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='payment.css') }}">
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .back-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .summary { 
+      border: 2px solid #4CAF50; 
+      padding: 20px; 
+      margin: 20px 0; 
+      border-radius: 10px;
+      background: #f8fff8;
+    }
+    
+    .pay-btn { 
+      background: linear-gradient(135deg, #4CAF50, #45a049); 
+      color: white;
+      padding: 15px 30px; 
+      border: none; 
+      font-size: 18px; 
+      cursor: pointer;
+      border-radius: 25px;
+      width: 100%;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .pay-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    .pay-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .payment-methods {
+      margin: 20px 0;
+    }
+    
+    .payment-methods label {
+      display: block;
+      padding: 10px;
+      margin: 10px 0;
+      border: 2px solid #e1e5e9;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .payment-methods label:hover {
+      border-color: #4CAF50;
+      background: #f8fff8;
+    }
+    
+    .payment-methods input[type="radio"]:checked + span {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    /* UPI Modal Styles */
+    .payment-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .payment-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .upi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .upi-option {
+      padding: 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .upi-option:hover {
+      border-color: #4CAF50;
+      background: #f8fff8;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .upi-option.selected {
+      border-color: #4CAF50;
+      background: #e8f5e8;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="/route" class="back-btn">← Back to Route</a>
+      <h2>Complete Payment</h2>
+      <p>Secure payment processing with automated notifications</p>
+    </div>
+    
+    <div class="content">
+      <h3>Payment Method</h3>
+      <p>📧 Automated Notifications: You will receive confirmation via Email and In-App notifications.</p>
+
+      <div class="payment-methods">
+        <label>
+          <input type="radio" name="method" value="upi" checked>
+          <span>💳 UPI Payment (Recommended)</span>
+        </label>
+        <label>
+          <input type="radio" name="method" value="card">
+          <span>💳 Card (Credit/Debit)</span>
+        </label>
+      </div>
+
+      <div class="summary">
+        <h3>Order Summary</h3>
+        <p><strong>Pass Type:</strong> <span id="passType">Daily Pass</span></p>
+        <p><strong>Route:</strong> <span id="route">City Center - Airport</span></p>
+        <p><strong>Pass Price:</strong> ₹<span id="price">50</span></p>
+        <p><strong>Processing Fee:</strong> ₹0</p>
+        <hr>
+        <p><strong>Total Amount:</strong> ₹<span id="total">50</span></p>
+        <button class="pay-btn" id="payBtn" onclick="showPaymentOptions()">
+          Proceed to Payment (₹50)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPI Payment Modal -->
+  <div id="upiModal" class="payment-modal">
+    <div class="payment-content">
+      <button class="close-btn" onclick="closeUPIModal()">&times;</button>
+      <h3><i class="fas fa-mobile-alt"></i> UPI Payment</h3>
+      <p>Choose your preferred UPI payment method:</p>
+      
+      <div class="upi-grid">
+        <div class="upi-option" onclick="selectUPI('phonepe')">
+          <i class="fas fa-mobile-alt" style="color: #5f259f; font-size: 2em;"></i>
+          <div>PhonePe</div>
+        </div>
+        <div class="upi-option" onclick="selectUPI('gpay')">
+          <i class="fab fa-google-pay" style="color: #4285f4; font-size: 2em;"></i>
+          <div>Google Pay</div>
+        </div>
+        <div class="upi-option" onclick="selectUPI('paytm')">
+          <i class="fas fa-wallet" style="color: #00baf2; font-size: 2em;"></i>
+          <div>Paytm</div>
+        </div>
+        <div class="upi-option" onclick="selectUPI('other')">
+          <i class="fas fa-university" style="color: #666; font-size: 2em;"></i>
+          <div>Other UPI</div>
+        </div>
+      </div>
+
+      <div class="payment-actions">
+        <button class="btn btn-primary" onclick="processUPIPayment()" id="upiPayBtn" disabled>
+          <i class="fas fa-credit-card"></i> Pay ₹<span id="upiPayAmount">50</span>
+        </button>
+        <button class="btn" onclick="instantPayment()" style="background: #ff9800; color: white; margin-top: 10px;">
+          <i class="fas fa-bolt"></i> Instant Payment (Demo)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedUPIMethod = null;
+    
+    // Load pass and route information immediately
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('💳 Payment page loading...');
+      loadPaymentData();
+    });
+
+    function loadPaymentData() {
+      console.log('📊 Loading payment data...');
+      
+      // Try multiple data sources
+      let passData = getPassData();
+      
+      console.log('📋 Final pass data:', passData);
+      
+      // Update all display elements
+      updateDisplay(passData);
+    }
+
+    function getPassData() {
+      // Method 1: Try localStorage
+      let selectedPass = localStorage.getItem('selectedPass');
+      let selectedPrice = localStorage.getItem('selectedPrice');
+      let selectedRoute = localStorage.getItem('selectedRoute');
+      let calculatedFare = localStorage.getItem('calculatedFare');
+      let routeDistance = localStorage.getItem('routeDistance');
+
+      console.log('💾 localStorage data:', {
+        selectedPass, selectedPrice, selectedRoute, calculatedFare, routeDistance
+      });
+
+      // Method 2: Try URL parameters
+      if (!selectedPass || selectedPass === 'null') {
+        const urlParams = new URLSearchParams(window.location.search);
+        selectedPass = urlParams.get('pass');
+        selectedPrice = urlParams.get('price');
+        selectedRoute = urlParams.get('route');
+        
+        console.log('🔗 URL parameters:', {
+          selectedPass, selectedPrice, selectedRoute
+        });
+      }
+
+      // Method 3: Use defaults
+      if (!selectedPass || selectedPass === 'null') {
+        selectedPass = 'Daily Pass';
+        selectedPrice = '₹50';
+        selectedRoute = 'City Center - Airport';
+        
+        console.log('🔄 Using defaults:', {
+          selectedPass, selectedPrice, selectedRoute
+        });
+      }
+
+      // Use calculated fare if available
+      if (calculatedFare && calculatedFare !== 'null') {
+        selectedPrice = `₹${calculatedFare}`;
+      }
+
+      // Format route with distance
+      if (routeDistance && routeDistance !== '0' && routeDistance !== 'null') {
+        const distance = parseFloat(routeDistance);
+        if (!isNaN(distance) && distance > 0 && !selectedRoute.includes('km')) {
+          selectedRoute += ` (${distance} km)`;
+        }
+      }
+
+      return {
+        pass: selectedPass,
+        price: selectedPrice,
+        route: selectedRoute,
+        numericPrice: parseInt(selectedPrice.replace('₹', '').replace(',', '')) || 50
+      };
+    }
+
+    function updateDisplay(passData) {
+      console.log('🖼️ Updating display with:', passData);
+      
+      // Update order summary
+      const passTypeEl = document.getElementById('passType');
+      const routeEl = document.getElementById('route');
+      const priceEl = document.getElementById('price');
+      const totalEl = document.getElementById('total');
+      const payBtnEl = document.getElementById('payBtn');
+      const upiPayAmountEl = document.getElementById('upiPayAmount');
+
+      if (passTypeEl) passTypeEl.textContent = passData.pass;
+      if (routeEl) routeEl.textContent = passData.route;
+      if (priceEl) priceEl.textContent = passData.numericPrice;
+      if (totalEl) totalEl.textContent = passData.numericPrice;
+      if (upiPayAmountEl) upiPayAmountEl.textContent = passData.numericPrice;
+      
+      if (payBtnEl) {
+        payBtnEl.textContent = `Proceed to Payment (₹${passData.numericPrice})`;
+        payBtnEl.disabled = false;
+        payBtnEl.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+      }
+
+      console.log('✅ Display updated successfully');
+    }
+
+    function showPaymentOptions() {
+      console.log('🔘 Payment method selection triggered');
+      
+      const selectedMethod = document.querySelector('input[name="method"]:checked');
+      if (!selectedMethod) {
+        alert('Please select a payment method first.');
+        return;
+      }
+      
+      const methodValue = selectedMethod.value;
+      console.log('💳 Selected payment method:', methodValue);
+      
+      if (methodValue === 'upi') {
+        // Show UPI payment modal
+        const upiModal = document.getElementById('upiModal');
+        if (upiModal) {
+          upiModal.style.display = 'flex';
+          console.log('✅ UPI modal displayed');
+        } else {
+          console.error('❌ UPI modal not found');
+          alert('Payment modal not found. Please refresh the page and try again.');
+        }
+      } else if (methodValue === 'card') {
+        alert('Card payment coming soon! Please use UPI for now.');
+      }
+    }
+
+    function selectUPI(method) {
+      console.log('📱 UPI method selected:', method);
+      
+      // Remove previous selection
+      document.querySelectorAll('.upi-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      
+      // Select current option
+      event.target.closest('.upi-option').classList.add('selected');
+      selectedUPIMethod = method;
+      
+      // Enable pay button
+      const payBtn = document.getElementById('upiPayBtn');
+      if (payBtn) {
+        payBtn.disabled = false;
+      }
+      
+      console.log('✅ UPI method selected:', method);
+    }
+
+    function processUPIPayment() {
+      if (!selectedUPIMethod) {
+        alert('Please select a UPI payment method first.');
+        return;
+      }
+
+      console.log('💳 Processing UPI payment with:', selectedUPIMethod);
+      
+      const amount = document.getElementById('upiPayAmount').textContent;
+      const passType = document.getElementById('passType').textContent;
+      const route = document.getElementById('route').textContent;
+      
+      // INSTANT RESPONSE - No processing delay
+      const payBtn = document.getElementById('upiPayBtn');
+      
+      // Immediately show UPI payment details without backend call
+      const upiData = {
+        success: true,
+        upi_id: '8340927497@ibl',
+        merchant_name: 'Lingam Manoj Kumar',
+        amount: amount,
+        app: selectedUPIMethod,
+        phone: '8340927497'
+      };
+      
+      console.log('✅ Instant UPI payment data:', upiData);
+      
+      // Close UPI modal immediately
+      closeUPIModal();
+      
+      // Show instant payment confirmation with UPI details
+      const confirmMessage = `💳 UPI Payment Ready!\n\nAmount: ₹${upiData.amount}\nUPI ID: ${upiData.upi_id}\nMerchant: ${upiData.merchant_name}\nApp: ${upiData.app.toUpperCase()}\n\nClick OK to open ${upiData.app.toUpperCase()} app`;
+      
+      if (confirm(confirmMessage)) {
+        // Try to open UPI app instantly
+        openUPIAppInstant(upiData);
+      }
+    }
+
+    function openUPIAppInstant(upiData) {
+      console.log('📱 Opening UPI app instantly:', upiData.app);
+      
+      // Generate UPI URL instantly (no backend call)
+      const upiUrl = generateUPIURL(upiData);
+      
+      // Detect device type
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Mobile: Try to open app instantly
+        try {
+          const tempLink = document.createElement('a');
+          tempLink.href = upiUrl;
+          tempLink.click();
+          
+          // Show instant confirmation dialog
+          setTimeout(() => {
+            if (confirm('Did the UPI app open successfully?\n\nOK = Yes, payment completed\nCancel = No, show manual payment options')) {
+              completePaymentInstant(upiData);
+            } else {
+              showManualPaymentInstant(upiData);
+            }
+          }, 1000); // Reduced from 3 seconds to 1 second
+          
+        } catch (error) {
+          console.error('Mobile app opening failed:', error);
+          showManualPaymentInstant(upiData);
+        }
+      } else {
+        // Desktop: Show manual payment immediately
+        showManualPaymentInstant(upiData);
+      }
+    }
+
+    function generateUPIURL(upiData) {
+      // Generate UPI URL instantly without backend call
+      const encodedMerchant = encodeURIComponent(upiData.merchant_name);
+      const encodedDescription = encodeURIComponent(`Smart Bus ${document.getElementById('passType').textContent}`);
+      
+      const upiUrls = {
+        'phonepe': `phonepe://pay?pa=${upiData.upi_id}&pn=${encodedMerchant}&am=${upiData.amount}&cu=INR&tn=${encodedDescription}`,
+        'gpay': `tez://upi/pay?pa=${upiData.upi_id}&pn=${encodedMerchant}&am=${upiData.amount}&cu=INR&tn=${encodedDescription}`,
+        'paytm': `paytmmp://pay?pa=${upiData.upi_id}&pn=${encodedMerchant}&am=${upiData.amount}&cu=INR&tn=${encodedDescription}`,
+        'other': `upi://pay?pa=${upiData.upi_id}&pn=${encodedMerchant}&am=${upiData.amount}&cu=INR&tn=${encodedDescription}`
+      };
+      
+      return upiUrls[upiData.app] || upiUrls['other'];
+    }
+
+    function showManualPaymentInstant(upiData) {
+      // Show manual payment options instantly
+      const manualMessage = `📱 Manual UPI Payment\n\nUPI ID: ${upiData.upi_id}\nAmount: ₹${upiData.amount}\nMerchant: ${upiData.merchant_name}\n\nSteps:\n1. Open any UPI app\n2. Pay to UPI ID: ${upiData.upi_id}\n3. Enter amount: ₹${upiData.amount}\n4. Complete payment\n\nClick OK when payment is done`;
+      
+      if (confirm(manualMessage)) {
+        completePaymentInstant(upiData);
+      }
+    }
+
+    function completePaymentInstant(upiData) {
+      console.log('🎉 Completing payment instantly...');
+      
+      // Show instant success message
+      const successMessage = `🎉 Payment Successful!\n\nPass: ${document.getElementById('passType').textContent}\nAmount: ₹${upiData.amount}\nUPI ID: ${upiData.upi_id}\n\nYour pass is now active!\nRedirecting to dashboard...`;
+      
+      alert(successMessage);
+      
+      // Add pass to user account instantly (no backend call for demo)
+      const passData = {
+        id: Date.now(),
+        type: document.getElementById('passType').textContent,
+        price: `₹${upiData.amount}`,
+        route: document.getElementById('route').textContent,
+        purchaseDate: new Date().toISOString(),
+        expiryDate: new Date(Date.now() + 24*60*60*1000).toISOString(), // 1 day from now
+        status: 'active',
+        paymentMethod: 'UPI',
+        receiptNumber: `SB${Date.now()}`,
+        merchantUPI: upiData.upi_id
+      };
+      
+      // Store in localStorage instantly
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      userPasses.push(passData);
+      localStorage.setItem('userPasses', JSON.stringify(userPasses));
+      
+      // Clear selection data
+      localStorage.removeItem('selectedPass');
+      localStorage.removeItem('selectedPrice');
+      localStorage.removeItem('selectedRoute');
+      localStorage.removeItem('calculatedFare');
+      localStorage.removeItem('routeDistance');
+      
+      // Set flag to indicate user just purchased a pass
+      sessionStorage.setItem('justPurchasedPass', 'true');
+      
+      // Redirect immediately
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000); // Reduced from 2 seconds to 1 second
+    }
+
+    function instantPayment() {
+      console.log('⚡ INSTANT PAYMENT - No delays!');
+      
+      const amount = document.getElementById('upiPayAmount').textContent;
+      const passType = document.getElementById('passType').textContent;
+      const route = document.getElementById('route').textContent;
+      
+      // Close modal immediately
+      closeUPIModal();
+      
+      // Show instant success (no processing, no delays)
+      alert(`⚡ INSTANT PAYMENT SUCCESSFUL!\n\nPass: ${passType}\nAmount: ₹${amount}\nRoute: ${route}\nUPI ID: 8340927497@ibl\n\n✅ Your pass is now active!\nRedirecting to dashboard...`);
+      
+      // Add pass to account instantly
+      const passData = {
+        id: Date.now(),
+        type: passType,
+        price: `₹${amount}`,
+        route: route,
+        purchaseDate: new Date().toISOString(),
+        expiryDate: new Date(Date.now() + 24*60*60*1000).toISOString(),
+        status: 'active',
+        paymentMethod: 'UPI (Instant)',
+        receiptNumber: `SB${Date.now()}`,
+        merchantUPI: '8340927497@ibl'
+      };
+      
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      userPasses.push(passData);
+      localStorage.setItem('userPasses', JSON.stringify(userPasses));
+      
+      // Clear selection data
+      localStorage.removeItem('selectedPass');
+      localStorage.removeItem('selectedPrice');
+      localStorage.removeItem('selectedRoute');
+      localStorage.removeItem('calculatedFare');
+      localStorage.removeItem('routeDistance');
+      
+      // Set flag to indicate user just purchased a pass
+      sessionStorage.setItem('justPurchasedPass', 'true');
+      
+      // Instant redirect (no delay)
+      window.location.href = '/dashboard';
+    }
+
+    function closeUPIModal() {
+      const upiModal = document.getElementById('upiModal');
+      if (upiModal) {
+        upiModal.style.display = 'none';
+      }
+      
+      // Reset selection
+      selectedUPIMethod = null;
+      document.querySelectorAll('.upi-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      
+      const payBtn = document.getElementById('upiPayBtn');
+      if (payBtn) {
+        payBtn.disabled = true;
+      }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const upiModal = document.getElementById('upiModal');
+      if (event.target === upiModal) {
+        closeUPIModal();
+      }
+    }
+  </script>
+</body>
+</html>

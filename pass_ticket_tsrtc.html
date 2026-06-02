@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSRTC Bus Pass</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .pass-container {
+            background: white;
+            width: 800px;
+            height: 500px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Pink and Green Gradient Background - Like Real TSRTC Pass */
+        .pass-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                #ffb6d9 0%, 
+                #ffc0e0 25%, 
+                #d4f1d4 50%, 
+                #b8e6b8 75%, 
+                #ffb6d9 100%
+            );
+            opacity: 0.3;
+        }
+
+        /* Decorative Circles - Like Real Pass */
+        .circle-pattern {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 182, 217, 0.5);
+        }
+
+        .circle-top-left {
+            top: -50px;
+            left: -50px;
+        }
+
+        .circle-bottom-right {
+            bottom: -50px;
+            right: -50px;
+        }
+
+
+        /* Punch Holes - Like Real Pass */
+        .punch-holes {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .punch-hole {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+        }
+
+        .hole-1 { top: 20px; left: 20px; }
+        .hole-2 { top: 20px; left: 180px; }
+        .hole-3 { top: 20px; right: 180px; }
+        .hole-4 { top: 20px; right: 20px; }
+        .hole-5 { bottom: 20px; left: 20px; }
+        .hole-6 { bottom: 20px; right: 20px; }
+
+        /* Main Content */
+        .pass-content {
+            position: relative;
+            z-index: 1;
+            padding: 60px 40px 40px 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* TSRTC Header */
+        .tsrtc-header {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .pass-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 2px;
+        }
+
+        .tsrtc-logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e91e63;
+            margin-bottom: 5px;
+        }
+
+        .tsrtc-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Pass Type */
+        .pass-type {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Pass Details Grid */
+        .pass-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Route Section */
+        .route-section {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .route-title {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .route-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .route-point {
+            flex: 1;
+        }
+
+        .route-arrow {
+            margin: 0 15px;
+            color: #4CAF50;
+            font-size: 20px;
+        }
+
+        /* Government Stamp */
+        .govt-stamp {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .stamp-circle {
+            width: 200px;
+            height: 200px;
+            border: 8px solid #e91e63;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .stamp-text {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e91e63;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .stamp-emblem {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #qrcode {
+            width: 120px;
+            height: 120px;
+        }
+
+        /* Validity Section */
+        .validity-section {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            text-align: right;
+        }
+
+        .validity-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .validity-dates {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Watermark */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            font-weight: bold;
+            color: rgba(233, 30, 99, 0.05);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Print Button */
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .print-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .print-btn {
+                display: none;
+            }
+            .pass-container {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .pass-container {
+                width: 95%;
+                height: auto;
+                aspect-ratio: 8/5;
+            }
+            .pass-content {
+                padding: 40px 20px 20px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Pass
+    </button>
+
+    <div class="pass-container">
+        <!-- Background Pattern -->
+        <div class="pass-background"></div>
+        
+        <!-- Decorative Circles -->
+        <div class="circle-pattern circle-top-left"></div>
+        <div class="circle-pattern circle-bottom-right"></div>
+        
+        <!-- Punch Holes -->
+        <div class="punch-holes">
+            <div class="punch-hole hole-1"></div>
+            <div class="punch-hole hole-2"></div>
+            <div class="punch-hole hole-3"></div>
+            <div class="punch-hole hole-4"></div>
+            <div class="punch-hole hole-5"></div>
+            <div class="punch-hole hole-6"></div>
+        </div>
+
+        <!-- Government Stamp Watermark -->
+        <div class="govt-stamp">
+            <div class="stamp-circle">
+                <div class="stamp-emblem">🏛️</div>
+                <div class="stamp-text">
+                    GOVERNMENT OF<br>
+                    TELANGANA<br>
+                    TSRTC<br>
+                    AUTHORIZED
+                </div>
+            </div>
+        </div>
+
+        <!-- Watermark -->
+        <div class="watermark">TSRTC</div>
+
+        <!-- Main Content -->
+        <div class="pass-content">
+            <!-- Header -->
+            <div class="tsrtc-header">
+                <div class="pass-number" id="passNumber">300 97334</div>
+                <div class="tsrtc-logo">TSRTC</div>
+                <div class="tsrtc-subtitle">Telangana State Road Transport Corporation</div>
+            </div>
+
+            <!-- Pass Type -->
+            <div class="pass-type" id="passType">STUDENT General</div>
+
+            <!-- Pass Details -->
+            <div class="pass-details">
+                <div class="detail-item">
+                    <div class="detail-label">ID No.</div>
+                    <div class="detail-value" id="idNumber">RNSPT1D25/66460425</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Ticket No.</div>
+                    <div class="detail-value" id="ticketNumber">TR062628/1376019</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Passenger Name</div>
+                    <div class="detail-value" id="passengerName">Student General</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Validity</div>
+                    <div class="detail-value" id="validity">20-Jan-2026 to 08-Apr-2026</div>
+                </div>
+            </div>
+
+            <!-- Route Section -->
+            <div class="route-section">
+                <div class="route-title">Route Details</div>
+                <div class="route-details">
+                    <div class="route-point">
+                        <div class="detail-label">From</div>
+                        <div class="detail-value" id="fromLocation">KOLLOUR RAJU</div>
+                    </div>
+                    <div class="route-arrow">→</div>
+                    <div class="route-point">
+                        <div class="detail-label">To</div>
+                        <div class="detail-value" id="toLocation">BITS</div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <div class="detail-label">Distance</div>
+                    <div class="detail-value" id="distance">30 KM</div>
+                </div>
+            </div>
+
+            <!-- QR Code -->
+            <div class="qr-section">
+                <div id="qrcode"></div>
+            </div>
+
+            <!-- Validity Dates -->
+            <div class="validity-section">
+                <div class="validity-label">Valid From</div>
+                <div class="validity-dates" id="validFrom">20-Jan-2026</div>
+                <div class="validity-label" style="margin-top: 10px;">Valid To</div>
+                <div class="validity-dates" id="validTo">08-Apr-2026</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get pass data from URL parameters or localStorage
+        function getPassData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const passId = urlParams.get('id');
+            
+            // Get user data from localStorage
+            const userName = localStorage.getItem('userName') || 'Student General';
+            const userEmail = localStorage.getItem('userEmail') || '';
+            
+            // Get pass data from localStorage
+            const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+            let passData = userPasses.find(p => p.id == passId);
+            
+            if (!passData && userPasses.length > 0) {
+                passData = userPasses[0]; // Use first pass if ID not found
+            }
+            
+            return {
+                userName: userName,
+                userEmail: userEmail,
+                passType: passData?.type || 'Daily Pass',
+                route: passData?.route || 'City Route',
+                distance: passData?.distance || '25 km',
+                purchaseDate: passData?.purchaseDate || new Date().toISOString(),
+                expiryDate: passData?.expiryDate || new Date().toISOString(),
+                transactionId: passData?.transactionId || passData?.id || 'N/A',
+                price: passData?.price || '₹25'
+            };
+        }
+
+        // Format date to DD-MMM-YYYY
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = date.getDate().toString().padStart(2, '0');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        // Generate pass number
+        function generatePassNumber() {
+            return '300 ' + Math.floor(10000 + Math.random() * 90000);
+        }
+
+        // Generate ID number
+        function generateIdNumber() {
+            const prefix = 'RNSPT1D25';
+            const suffix = Math.floor(10000000 + Math.random() * 90000000);
+            return `${prefix}/${suffix}`;
+        }
+
+        // Generate ticket number
+        function generateTicketNumber() {
+            const prefix = 'TR' + Math.floor(100000 + Math.random() * 900000);
+            const suffix = Math.floor(1000000 + Math.random() * 9000000);
+            return `${prefix}/${suffix}`;
+        }
+
+        // Parse route to get from/to locations
+        function parseRoute(route) {
+            if (route.includes(' to ')) {
+                const parts = route.split(' to ');
+                return { from: parts[0].trim(), to: parts[1].trim() };
+            } else if (route.includes('-')) {
+                const parts = route.split('-');
+                return { from: parts[0].trim(), to: parts[1].trim() };
+            } else {
+                return { from: 'KOLLOUR RAJU', to: 'BITS' };
+            }
+        }
+
+        // Initialize pass
+        function initializePass() {
+            const passData = getPassData();
+            
+            // Update pass number
+            document.getElementById('passNumber').textContent = generatePassNumber();
+            
+            // Update pass type
+            document.getElementById('passType').textContent = passData.passType.toUpperCase();
+            
+            // Update ID and ticket numbers
+            document.getElementById('idNumber').textContent = generateIdNumber();
+            document.getElementById('ticketNumber').textContent = generateTicketNumber();
+            
+            // Update passenger name
+            document.getElementById('passengerName').textContent = passData.userName;
+            
+            // Update dates
+            const fromDate = formatDate(passData.purchaseDate);
+            const toDate = formatDate(passData.expiryDate);
+            document.getElementById('validity').textContent = `${fromDate} to ${toDate}`;
+            document.getElementById('validFrom').textContent = fromDate;
+            document.getElementById('validTo').textContent = toDate;
+            
+            // Update route
+            const routeInfo = parseRoute(passData.route);
+            document.getElementById('fromLocation').textContent = routeInfo.from.toUpperCase();
+            document.getElementById('toLocation').textContent = routeInfo.to.toUpperCase();
+            
+            // Update distance
+            document.getElementById('distance').textContent = passData.distance.toUpperCase();
+            
+            // Generate QR Code
+            const qrData = JSON.stringify({
+                passNumber: document.getElementById('passNumber').textContent,
+                name: passData.userName,
+                type: passData.passType,
+                from: fromDate,
+                to: toDate,
+                route: passData.route,
+                transactionId: passData.transactionId
+            });
+            
+            new QRCode(document.getElementById('qrcode'), {
+                text: qrData,
+                width: 120,
+                height: 120,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Initialize on page load
+        window.onload = initializePass;
+    </script>
+</body>
+</html>

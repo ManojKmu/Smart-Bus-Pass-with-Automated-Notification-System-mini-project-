@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renew Pass - Smart Bus</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='renew-pass.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="form-box">
+            <h2>Renew Your Pass</h2>
+            <p>Enter your email address to verify and renew your pass</p>
+            
+            <form action="/send-renew-otp" method="POST" id="renewForm">
+                {% if error %}
+                <div class="error-message" style="display: block; color: #e74c3c; background: #ffeaea; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+                    {{ error }}
+                </div>
+                {% endif %}
+                
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                
+                <button type="submit" class="submit-btn">Send OTP</button>
+            </form>
+            
+            <div class="back-link">
+                <a href="/passes">← Back to Passes</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='renew-pass.js') }}"></script>
+</body>
+</html>

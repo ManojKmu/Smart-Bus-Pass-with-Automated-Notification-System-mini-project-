@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment - Smart Bus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='payment.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .back-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    /* Real-time Payment System Styles */
+    .payment-status {
+      background: linear-gradient(135deg, #e8f5e8, #f0fff0);
+      border: 2px solid #4CAF50;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #4CAF50;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .amount-display {
+      background: linear-gradient(135deg, #f8fff8, #e8f5e8);
+      border: 3px solid #4CAF50;
+      border-radius: 15px;
+      padding: 25px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .amount-label {
+      font-size: 16px;
+      color: #2e7d32;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    
+    .amount-value {
+      font-size: 3em;
+      font-weight: bold;
+      color: #4CAF50;
+      margin: 10px 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .merchant-info {
+      background: #e3f2fd;
+      border: 2px solid #2196F3;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    
+    .merchant-info h4 {
+      margin: 0 0 10px 0;
+      color: #1976d2;
+    }
+    
+    /* Payment Method Tabs */
+    .payment-method-tabs {
+      display: flex;
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 5px;
+      margin: 20px 0;
+      border: 2px solid #4CAF50;
+    }
+    
+    .method-tab {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      color: #666;
+    }
+    
+    .method-tab.active {
+      background: #4CAF50;
+      color: white;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+    
+    .method-tab:hover:not(.active) {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4CAF50;
+    }
+    
+    .method-content {
+      display: none;
+      background: #f8fff8;
+      border: 2px solid #4CAF50;
+      border-radius: 15px;
+      padding: 25px;
+      margin: 20px 0;
+    }
+    
+    .method-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* QR Code Section */
+    .qr-section {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .qr-container {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      display: inline-block;
+      margin: 20px 0;
+      border: 3px solid #4CAF50;
+    }
+    
+    .qr-code {
+      width: 250px;
+      height: 250px;
+      border-radius: 10px;
+      background: #f8fff8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #4CAF50;
+    }
+    
+    .qr-loading {
+      color: #4CAF50;
+      text-align: center;
+    }
+    
+    .qr-instructions {
+      background: #e3f2fd;
+      border: 2px solid #2196F3;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    
+    /* UPI Apps Grid */
+    .upi-apps-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .upi-app-card {
+      background: white;
+      border: 3px solid #e1e5e9;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .upi-app-card:hover {
+      border-color: #4CAF50;
+      background: #f8fff8;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+    }
+    
+    .upi-app-card.selected {
+      border-color: #4CAF50;
+      background: #e8f5e8;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+    }
+    
+    .upi-app-icon {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+    
+    .upi-app-name {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    
+    .upi-app-subtitle {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .tap-to-pay {
+      background: #4CAF50;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    
+    /* Manual Payment Section */
+    .manual-payment {
+      background: #fff3e0;
+      border: 2px solid #ff9800;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .payment-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e1e5e9;
+    }
+    
+    .payment-detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      font-weight: bold;
+      color: #f57c00;
+    }
+    
+    .detail-value {
+      font-weight: bold;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .copy-btn {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .copy-btn:hover {
+      background: #1976D2;
+      transform: scale(1.05);
+    }
+    
+    .copy-btn.copied {
+      background: #4CAF50;
+      animation: copySuccess 0.3s ease;
+    }
+    
+    @keyframes copySuccess {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    /* Payment Buttons */
+    .payment-actions {
+      margin-top: 30px;
+    }
+    
+    .pay-btn { 
+      background: linear-gradient(135deg, #4CAF50, #45a049); 
+      color: white;
+      padding: 18px 30px; 
+      border: none; 
+      font-size: 18px; 
+      cursor: pointer;
+      border-radius: 25px;
+      width: 100%;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .pay-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+    }
+    
+    .pay-btn:active {
+      transform: translateY(0);
+    }
+    
+    .pay-btn.processing {
+      background: #ff9800;
+      cursor: not-allowed;
+    }
+    
+    .pay-btn.success {
+      background: #4CAF50;
+    }
+    
+    /* Success Animation */
+    .success-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(76, 175, 80, 0.95);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    
+    .success-content {
+      animation: successPop 0.6s ease-out;
+    }
+    
+    @keyframes successPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .container {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+      }
+      
+      .content {
+        padding: 20px;
+      }
+      
+      .upi-apps-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .amount-value {
+        font-size: 2.5em;
+      }
+      
+      .payment-method-tabs {
+        flex-direction: column;
+      }
+      
+      .method-tab {
+        margin-bottom: 5px;
+      }
+    }
+    
+    /* Security Indicators */
+    .security-badge {
+      background: #e8f5e8;
+      border: 2px solid #4CAF50;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .security-badge i {
+      color: #4CAF50;
+      font-size: 1.5em;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="/route" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+      <h2><i class="fas fa-credit-card"></i> Smart Payment System</h2>
+      <p>Secure • Fast • Real-time</p>
+    </div>
+    
+    <div class="content">
+      <!-- Real-time Payment Status -->
+      <div class="payment-status">
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          LIVE PAYMENT SYSTEM
+        </div>
+        <p><i class="fas fa-shield-alt"></i> Secure UPI Payment Gateway</p>
+      </div>
+
+      <!-- Amount Display -->
+      <div class="amount-display">
+        <div class="amount-label">Amount to Pay</div>
+        <div class="amount-value">₹<span id="totalAmount">0</span></div>
+        <div><strong>Service:</strong> <span id="passType">Loading...</span></div>
+        <div><strong>Route:</strong> <span id="route">Loading...</span></div>
+      </div>
+
+      <!-- Merchant Information -->
+      <div class="merchant-info">
+        <h4><i class="fas fa-store"></i> Merchant Details</h4>
+        <p><strong>Name:</strong> Lingam Manoj Kumar</p>
+        <p><strong>UPI ID:</strong> 8340927497@ibl</p>
+        <p><strong>Phone:</strong> +91 8340927497</p>
+      </div>
+
+      <!-- Payment Method Selection -->
+      <div class="payment-method-tabs">
+        <button class="method-tab active" onclick="switchPaymentMethod('qr')">
+          <i class="fas fa-qrcode"></i><br>QR Code
+        </button>
+        <button class="method-tab" onclick="switchPaymentMethod('apps')">
+          <i class="fas fa-mobile-alt"></i><br>UPI Apps
+        </button>
+        <button class="method-tab" onclick="switchPaymentMethod('manual')">
+          <i class="fas fa-keyboard"></i><br>Manual
+        </button>
+      </div>
+
+      <!-- QR Code Payment Method -->
+      <div class="method-content active" id="qr-method">
+        <h3><i class="fas fa-qrcode"></i> Scan QR Code to Pay</h3>
+        <div class="qr-section">
+          <div class="qr-container">
+            <div class="qr-code" id="qrCodeContainer">
+              <div class="qr-loading">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2em; margin-bottom: 10px;"></i><br>
+                Generating QR Code...
+              </div>
+            </div>
+          </div>
+          
+          <div class="qr-instructions">
+            <h4><i class="fas fa-mobile-alt"></i> How to Pay with QR Code:</h4>
+            <ol>
+              <li>Open any UPI app (PhonePe, GPay, Paytm, BHIM, etc.)</li>
+              <li>Look for "Scan QR" or "Scan & Pay" option</li>
+              <li>Point your camera at the QR code above</li>
+              <li>Verify the amount (₹<span class="qr-amount">0</span>) and merchant details</li>
+              <li>Enter your UPI PIN to complete payment</li>
+              <li>Return here and click "I've Completed Payment"</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPI Apps Payment Method -->
+      <div class="method-content" id="apps-method">
+        <h3><i class="fas fa-mobile-alt"></i> Pay with UPI Apps</h3>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+          <i class="fas fa-info-circle"></i> Tap on your preferred UPI app to pay directly
+        </p>
+        
+        <div class="upi-apps-grid">
+          <div class="upi-app-card" onclick="openUPIApp('phonepe')">
+            <div class="upi-app-icon" style="color: #5f259f;">
+              <i class="fas fa-mobile-alt"></i>
+            </div>
+            <div class="upi-app-name">PhonePe</div>
+            <div class="upi-app-subtitle">Most Popular</div>
+            <div class="tap-to-pay">Tap to Pay</div>
+          </div>
+
+          <div class="upi-app-card" onclick="openUPIApp('gpay')">
+            <div class="upi-app-icon" style="color: #4285f4;">
+              <i class="fab fa-google-pay"></i>
+            </div>
+            <div class="upi-app-name">Google Pay</div>
+            <div class="upi-app-subtitle">By Google</div>
+            <div class="tap-to-pay">Tap to Pay</div>
+          </div>
+
+          <div class="upi-app-card" onclick="openUPIApp('paytm')">
+            <div class="upi-app-icon" style="color: #00baf2;">
+              <i class="fas fa-wallet"></i>
+            </div>
+            <div class="upi-app-name">Paytm</div>
+            <div class="upi-app-subtitle">Digital Wallet</div>
+            <div class="tap-to-pay">Tap to Pay</div>
+          </div>
+
+          <div class="upi-app-card" onclick="openUPIApp('bhim')">
+            <div class="upi-app-icon" style="color: #ff6b35;">
+              <i class="fas fa-university"></i>
+            </div>
+            <div class="upi-app-name">BHIM UPI</div>
+            <div class="upi-app-subtitle">Government App</div>
+            <div class="tap-to-pay">Tap to Pay</div>
+          </div>
+        </div>
+        
+        <div style="background: #fff3e0; border: 2px solid #ff9800; border-radius: 10px; padding: 15px; margin: 20px 0; text-align: center;">
+          <p style="margin: 0; color: #f57c00;">
+            <i class="fas fa-info-circle"></i> <strong>Note:</strong> UPI app links work best on mobile devices. On desktop, use QR code method.
+          </p>
+        </div>
+      </div>
+
+      <!-- Manual Payment Method -->
+      <div class="method-content" id="manual-method">
+        <h3><i class="fas fa-keyboard"></i> Manual UPI Payment</h3>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+          Copy the details below and pay through any UPI app
+        </p>
+        
+        <div class="manual-payment">
+          <div class="payment-detail-row">
+            <span class="detail-label">UPI ID:</span>
+            <span class="detail-value">
+              8340927497@ibl
+              <button class="copy-btn" onclick="copyToClipboard('8340927497@ibl', this)">Copy</button>
+            </span>
+          </div>
+          
+          <div class="payment-detail-row">
+            <span class="detail-label">Merchant Name:</span>
+            <span class="detail-value">
+              Lingam Manoj Kumar
+              <button class="copy-btn" onclick="copyToClipboard('Lingam Manoj Kumar', this)">Copy</button>
+            </span>
+          </div>
+          
+          <div class="payment-detail-row">
+            <span class="detail-label">Amount:</span>
+            <span class="detail-value">
+              ₹<span id="manualAmount">0</span>
+              <button class="copy-btn" onclick="copyAmount(this)">Copy</button>
+            </span>
+          </div>
+          
+          <div class="payment-detail-row">
+            <span class="detail-label">Reference:</span>
+            <span class="detail-value">
+              Smart Bus Pass
+              <button class="copy-btn" onclick="copyToClipboard('Smart Bus Pass', this)">Copy</button>
+            </span>
+          </div>
+        </div>
+        
+        <div style="background: #e3f2fd; border: 2px solid #2196F3; border-radius: 10px; padding: 20px; margin: 20px 0;">
+          <h4 style="margin: 0 0 15px 0; color: #1976d2;"><i class="fas fa-list-ol"></i> Step-by-Step Instructions:</h4>
+          <ol style="margin: 0; color: #1976d2;">
+            <li>Open your UPI app (PhonePe, GPay, Paytm, etc.)</li>
+            <li>Select "Send Money" or "Pay to Contact"</li>
+            <li>Enter UPI ID: <strong>8340927497@ibl</strong></li>
+            <li>Enter amount: <strong>₹<span class="manual-amount-ref">0</span></strong></li>
+            <li>Add note: <strong>Smart Bus Pass</strong></li>
+            <li>Enter your UPI PIN and confirm payment</li>
+            <li>Return here and click "I've Completed Payment"</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Security Badge -->
+      <div class="security-badge">
+        <i class="fas fa-shield-alt"></i>
+        <strong>100% Secure Payment</strong> • SSL Encrypted • UPI Protected
+      </div>
+
+      <!-- Payment Confirmation Button -->
+      <div class="payment-actions">
+        <button class="pay-btn" id="confirmPaymentBtn" onclick="confirmPayment()">
+          <i class="fas fa-check-circle"></i> I've Completed the Payment
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-content">
+      <div style="font-size: 5em; margin-bottom: 20px;">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h1 style="margin: 0 0 15px 0; font-size: 2.5em;">Payment Successful!</h1>
+      <p style="font-size: 1.3em; margin: 0 0 20px 0;">Your Smart Bus Pass is now active</p>
+      <div id="successDetails" style="font-size: 1.1em; opacity: 0.9;"></div>
+    </div>
+  </div>
+
+  <!-- UPI Payment Modal -->
+  <div id="upiModal" class="payment-modal">
+    <div class="payment-content">
+      <button class="close-btn" onclick="closeUPIModal()">&times;</button>
+      <h3><i class="fas fa-mobile-alt"></i> UPI Payment</h3>
+      <p>Choose your preferred UPI payment method:</p>
+      
+      <div class="upi-grid">
+        <div class="upi-option" onclick="selectUPI('phonepe')">
+          <i class="fas fa-mobile-alt" style="color: #5f259f; font-size: 2em;"></i>
+          <div>PhonePe</div>
+        </div>
+        <div class="upi-option" onclick="selectUPI('gpay')">
+          <i class="fab fa-google-pay" style="color: #4285f4; font-size: 2em;"></i>
+          <div>Google Pay</div>
+        </div>
+        <div class="upi-option" onclick="selectUPI('paytm')">
+          <i class="fas fa-wallet" style="color: #00baf2; font-size: 2em;"></i>
+          <div>Paytm</div>
+        </div>
+        <div class="upi-option" onclick="selectUPI('other')">
+          <i class="fas fa-university" style="color: #666; font-size: 2em;"></i>
+          <div>Other UPI</div>
+        </div>
+      </div>
+
+      <div id="upiDetails" class="upi-details">
+        <div class="merchant-info">
+          <h4><i class="fas fa-store"></i> Merchant Details</h4>
+          <div class="merchant-card">
+            <div class="merchant-avatar">LMK</div>
+            <div class="merchant-details">
+              <p><strong>Name:</strong> Lingam Manoj Kumar</p>
+              <p><strong>Phone:</strong> 8340927497</p>
+              <p><strong>UPI ID:</strong> 8340927497@ibl</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="payment-summary">
+          <h4><i class="fas fa-receipt"></i> Payment Summary</h4>
+          <div class="amount-display">
+            <span>Total Amount:</span>
+            <span class="amount">₹<span id="upiAmount">0</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-actions">
+        <button class="btn btn-primary" onclick="processUPIPayment()" id="upiPayBtn" disabled>
+          <i class="fas fa-credit-card"></i> Pay ₹<span id="upiPayAmount">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .payment-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .payment-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .upi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .upi-option {
+      padding: 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .upi-option:hover {
+      border-color: #4CAF50;
+      background: #f8fff8;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .upi-option.selected {
+      border-color: #4CAF50;
+      background: #e8f5e8;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+    }
+
+    .upi-option div {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .upi-details {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      display: none;
+    }
+
+    .merchant-info {
+      margin-bottom: 20px;
+    }
+
+    .merchant-card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e1e5e9;
+    }
+
+    .merchant-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .merchant-details p {
+      margin: 5px 0;
+      color: #555;
+    }
+
+    .payment-summary {
+      border-top: 1px solid #e1e5e9;
+      padding-top: 15px;
+    }
+
+    .amount-display {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e1e5e9;
+    }
+
+    .amount {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+
+    .payment-actions {
+      margin-top: 20px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+  </style>
+
+  <script>
+    let selectedUPIMethod = null;
+    
+    // Load pass and route information from localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('💳 Real-time Payment System loading...');
+      
+      // Initialize real-time payment system
+      initializeRealTimePayment();
+      
+      // Load payment data
+      loadPaymentData();
+      
+      // Generate QR code for mobile payments
+      generateQRCode();
+      
+      // Set up payment method switching
+      setupPaymentMethods();
+    });
+
+    function initializeRealTimePayment() {
+      console.log('🚀 Initializing real-time payment system...');
+      
+      // Add live payment status indicator
+      updatePaymentStatus('live', 'LIVE PAYMENT SYSTEM');
+      
+      // Set up real-time features
+      setupRealTimeFeatures();
+    }
+
+    function loadPaymentData() {
+      console.log('📊 Loading payment data...');
+      
+      // Debug: Log all localStorage values
+      console.log('🔍 All localStorage values:', {
+        selectedPass: localStorage.getItem('selectedPass'),
+        selectedPrice: localStorage.getItem('selectedPrice'),
+        selectedRoute: localStorage.getItem('selectedRoute'),
+        routeDistance: localStorage.getItem('routeDistance'),
+        calculatedFare: localStorage.getItem('calculatedFare'),
+        travelTime: localStorage.getItem('travelTime')
+      });
+      
+      // Try to get data from localStorage first
+      let selectedPass = localStorage.getItem('selectedPass');
+      let selectedPrice = localStorage.getItem('selectedPrice');
+      let selectedRoute = localStorage.getItem('selectedRoute');
+      const routeDistance = localStorage.getItem('routeDistance');
+      const calculatedFare = localStorage.getItem('calculatedFare');
+      const travelTime = localStorage.getItem('travelTime');
+      
+      // If no data in localStorage, try URL parameters
+      if (!selectedPass || !selectedPrice || selectedPass === 'null' || selectedPrice === 'null') {
+        const urlParams = new URLSearchParams(window.location.search);
+        selectedPass = urlParams.get('pass') || 'Daily Pass';
+        selectedPrice = urlParams.get('price') || '₹75';
+        selectedRoute = urlParams.get('route') || 'City Center - Airport';
+        
+        // Store in localStorage for consistency
+        localStorage.setItem('selectedPass', selectedPass);
+        localStorage.setItem('selectedPrice', selectedPrice);
+        localStorage.setItem('selectedRoute', selectedRoute);
+        
+        console.log('📝 Loaded data from URL parameters:', {
+          pass: selectedPass,
+          price: selectedPrice,
+          route: selectedRoute
+        });
+      }
+      
+      // If still no data, use defaults and show warning
+      if (!selectedPass || selectedPass === 'null') {
+        selectedPass = 'Daily Pass';
+        selectedPrice = '₹75';
+        selectedRoute = 'Please select route from dashboard';
+        
+        console.warn('⚠️ No pass data found, using defaults');
+        
+        // Show user-friendly message with options
+        const userChoice = confirm('No pass selected. Would you like to:\n\nOK = Go back to select a pass\nCancel = Continue with default Daily Pass (₹75)');
+        if (userChoice) {
+          window.location.href = '/passes';
+          return;
+        } else {
+          // User chose to continue with defaults
+          selectedPass = 'Daily Pass';
+          selectedPrice = '₹75';
+          selectedRoute = 'Default Route';
+          
+          // Store defaults in localStorage
+          localStorage.setItem('selectedPass', selectedPass);
+          localStorage.setItem('selectedPrice', selectedPrice);
+          localStorage.setItem('selectedRoute', selectedRoute);
+        }
+      }
+      
+      // Use calculated fare if available
+      if (calculatedFare && calculatedFare !== 'null') {
+        selectedPrice = `₹${calculatedFare}`;
+        console.log('💰 Using calculated fare:', selectedPrice);
+      }
+      
+      // Extract numeric price
+      const numericPrice = parseInt(selectedPrice.replace('₹', '').replace(',', '')) || 75;
+      
+      // Format route display with distance - ENHANCED VERSION
+      let routeDisplay = selectedRoute || 'Route not selected';
+      console.log('🗺️ Original route:', routeDisplay);
+      console.log('📏 Route distance from storage:', routeDistance);
+      
+      if (routeDistance && routeDistance !== '0' && routeDistance !== 'undefined' && routeDistance !== 'null') {
+        const distance = parseFloat(routeDistance);
+        console.log('📏 Parsed distance:', distance);
+        
+        if (!isNaN(distance) && distance > 0) {
+          // Check if route already has distance info
+          if (!routeDisplay.includes('km')) {
+            routeDisplay += ` (${distance} km)`;
+          }
+          console.log('✅ Route with distance:', routeDisplay);
+        } else {
+          console.log('❌ Invalid distance value:', distance);
+          // Try to extract distance from calculatedFare context
+          if (calculatedFare) {
+            console.log('💡 Using fare-based distance estimation');
+            const estimatedDistance = Math.round((parseInt(calculatedFare) - 8) / 1.8 * 10) / 10;
+            if (estimatedDistance > 0) {
+              routeDisplay += ` (${estimatedDistance} km est.)`;
+              console.log('✅ Route with estimated distance:', routeDisplay);
+            }
+          }
+        }
+      } else {
+        console.log('❌ No valid distance found in localStorage');
+        // Show route without distance but indicate it's missing
+        if (selectedRoute && !selectedRoute.includes('km') && selectedRoute !== 'Please select route from dashboard') {
+          routeDisplay += ' (distance not calculated)';
+        }
+      }
+      
+      // Update display elements
+      updatePaymentDisplay(selectedPass, routeDisplay, numericPrice);
+      
+      console.log('💳 Payment data loaded successfully:', {
+        pass: selectedPass,
+        price: selectedPrice,
+        route: selectedRoute,
+        routeDisplay: routeDisplay,
+        distance: routeDistance ? `${routeDistance} km` : 'Not calculated',
+        calculatedFare: calculatedFare || 'Using base price',
+        travelTime: travelTime ? `${travelTime} mins` : 'Not calculated'
+      });
+    }
+
+    function updatePaymentDisplay(selectedPass, routeDisplay, numericPrice) {
+      // Update all amount displays
+      const amountElements = document.querySelectorAll('#totalAmount, #manualAmount, .qr-amount, .manual-amount-ref');
+      amountElements.forEach(element => {
+        if (element) element.textContent = numericPrice;
+      });
+      
+      // Update pass type displays
+      const passTypeElements = document.querySelectorAll('#passType');
+      passTypeElements.forEach(element => {
+        if (element) element.textContent = selectedPass;
+      });
+      
+      // Update route displays
+      const routeElements = document.querySelectorAll('#route');
+      routeElements.forEach(element => {
+        if (element) element.textContent = routeDisplay;
+      });
+    }
+
+    function setupRealTimeFeatures() {
+      console.log('⚡ Setting up real-time features...');
+      
+      // Add payment status monitoring
+      startPaymentStatusMonitoring();
+      
+      // Set up device detection
+      detectDeviceType();
+      
+      // Initialize security features
+      initializeSecurityFeatures();
+    }
+
+    function startPaymentStatusMonitoring() {
+      console.log('📡 Starting payment status monitoring...');
+      
+      // Update live indicator every 2 seconds
+      setInterval(() => {
+        const liveDot = document.querySelector('.live-dot');
+        if (liveDot) {
+          liveDot.style.animation = 'pulse 1.5s infinite';
+        }
+      }, 2000);
+    }
+
+    function detectDeviceType() {
+      // Improved mobile detection with multiple methods
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const mobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const smallScreen = window.innerWidth <= 768;
+      const isMobile = mobileUA || (hasTouch && smallScreen);
+      
+      console.log('📱 Device detection:');
+      console.log('  - User Agent Mobile:', mobileUA);
+      console.log('  - Has Touch:', hasTouch);
+      console.log('  - Small Screen:', smallScreen);
+      console.log('  - Final Result:', isMobile ? 'Mobile' : 'Desktop');
+      
+      // Store device type for backend
+      localStorage.setItem('deviceType', isMobile ? 'Mobile' : 'Desktop');
+      
+      // Show appropriate payment methods
+      if (isMobile) {
+        // Prioritize UPI apps for mobile
+        console.log('📱 Mobile detected - showing UPI apps');
+        switchPaymentMethod('apps');
+      } else {
+        // Prioritize QR code for desktop
+        console.log('🖥️ Desktop detected - showing QR code');
+        switchPaymentMethod('qr');
+      }
+    }
+
+    function initializeSecurityFeatures() {
+      console.log('🔒 Initializing security features...');
+      
+      // Add security indicators
+      const securityBadge = document.querySelector('.security-badge');
+      if (securityBadge) {
+        securityBadge.style.display = 'block';
+      }
+    }
+
+    function generateQRCode() {
+      console.log('📱 Generating QR code for payment...');
+      
+      const amount = document.getElementById('totalAmount')?.textContent || '75';
+      const passType = document.getElementById('passType')?.textContent || 'Daily Pass';
+      
+      // UPI payment URL format
+      const upiId = '8340927497@ibl';
+      const merchantName = 'Lingam Manoj Kumar';
+      const note = `Smart Bus ${passType}`;
+      
+      // Create UPI payment URL
+      const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+      
+      console.log('🔗 Generated UPI URL:', upiUrl);
+      
+      // Generate QR code using QR Server API
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+      
+      // Update QR code container
+      const qrContainer = document.getElementById('qrCodeContainer');
+      if (qrContainer) {
+        qrContainer.innerHTML = `
+          <img src="${qrApiUrl}" alt="UPI Payment QR Code" style="width: 250px; height: 250px; border-radius: 10px;" 
+               onload="console.log('✅ QR Code loaded successfully')"
+               onerror="this.innerHTML='<div style=\\'color: #f44336; text-align: center; padding: 50px;\\'>QR Code unavailable<br><small>Use UPI Apps or Manual method</small></div>'">
+        `;
+      }
+      
+      // Update QR amount references
+      const qrAmountElements = document.querySelectorAll('.qr-amount');
+      qrAmountElements.forEach(element => {
+        if (element) element.textContent = amount;
+      });
+    }
+
+    function setupPaymentMethods() {
+      console.log('🔧 Setting up payment method switching...');
+      
+      // Ensure QR method is active by default
+      switchPaymentMethod('qr');
+    }
+
+    function switchPaymentMethod(method) {
+      console.log('🔄 Switching to payment method:', method);
+      
+      // Remove active class from all tabs and contents
+      document.querySelectorAll('.method-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.method-content').forEach(content => content.classList.remove('active'));
+      
+      // Add active class to selected tab and content
+      const selectedTab = document.querySelector(`.method-tab[onclick*="${method}"]`);
+      const selectedContent = document.getElementById(`${method}-method`);
+      
+      if (selectedTab) selectedTab.classList.add('active');
+      if (selectedContent) selectedContent.classList.add('active');
+      
+      // Update QR code if switching to QR method
+      if (method === 'qr') {
+        setTimeout(() => generateQRCode(), 100);
+      }
+    }
+
+    function openUPIApp(appName) {
+      console.log('📱 Opening UPI app:', appName);
+      
+      const amount = document.getElementById('totalAmount')?.textContent || '75';
+      const passType = document.getElementById('passType')?.textContent || 'Daily Pass';
+      
+      // UPI payment details
+      const upiId = '8340927497@ibl';
+      const merchantName = 'Lingam Manoj Kumar';
+      const note = `Smart Bus ${passType}`;
+      
+      // Improved mobile detection
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const mobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const smallScreen = window.innerWidth <= 768;
+      const isMobile = mobileUA || (hasTouch && smallScreen);
+      
+      console.log('📱 Device check for UPI app:');
+      console.log('  - Mobile UA:', mobileUA);
+      console.log('  - Has Touch:', hasTouch);
+      console.log('  - Small Screen:', smallScreen);
+      console.log('  - Is Mobile:', isMobile);
+      
+      // If not mobile, show desktop instructions immediately
+      if (!isMobile) {
+        console.log('🖥️ Desktop detected - showing manual instructions');
+        alert(`💻 UPI PAYMENT APPS WORK ONLY ON MOBILE\n\nTo complete payment:\n\n📱 Option 1: Use your mobile phone\n1. Open ${appName.toUpperCase()} or any UPI app\n2. Select "Pay to UPI ID"\n3. Enter UPI ID: ${upiId}\n4. Enter amount: ₹${amount}\n5. Complete payment\n\n📱 Option 2: Scan QR code\n- Use the QR code shown above\n- Scan with any UPI app on your phone\n\nAfter payment, click "I've Completed Payment" button`);
+        return;
+      }
+      
+      // Mobile device - generate app-specific UPI URL
+      let upiUrl = '';
+      
+      switch(appName.toLowerCase()) {
+        case 'phonepe':
+          upiUrl = `phonepe://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+          break;
+        case 'gpay':
+          upiUrl = `tez://upi/pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+          break;
+        case 'paytm':
+          upiUrl = `paytmmp://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+          break;
+        case 'bhim':
+          upiUrl = `bhim://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+          break;
+        default:
+          upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+      }
+      
+      console.log(`📱 Mobile confirmed - opening ${appName.toUpperCase()}`);
+      console.log(`🔗 UPI URL:`, upiUrl);
+      
+      // Try to open the UPI app
+      try {
+        window.location.href = upiUrl;
+        console.log(`✅ Attempted to open ${appName.toUpperCase()} app`);
+        
+        // Show confirmation dialog after delay
+        setTimeout(() => {
+          const confirmed = confirm(`💳 UPI APP OPENING\n\nDid ${appName.toUpperCase()} app open successfully?\n\nIf YES:\n✅ Complete the payment in the app\n✅ Return here and click OK\n\nIf NO:\n❌ Click Cancel to try another method\n\nAmount: ₹${amount}\nUPI ID: ${upiId}`);
+          
+          if (confirmed) {
+            confirmPayment();
+          } else {
+            alert(`📱 TRY ANOTHER METHOD\n\nIf ${appName.toUpperCase()} didn't open:\n\n1. Try another UPI app button\n2. OR manually open any UPI app\n3. Pay to UPI ID: ${upiId}\n4. Amount: ₹${amount}\n5. Return and click "I've Completed Payment"`);
+          }
+        }, 2000);
+        
+      } catch (error) {
+        console.error(`❌ Failed to open ${appName.toUpperCase()}:`, error);
+        alert(`❌ COULDN'T OPEN ${appName.toUpperCase()}\n\nPlease:\n1. Open ${appName.toUpperCase()} manually\n2. OR try another UPI app\n3. Pay to UPI ID: ${upiId}\n4. Amount: ₹${amount}\n5. Return and click "I've Completed Payment"`);
+      }
+    }
+
+    function showPaymentConfirmationDialog(appName, amount, upiId) {
+      const confirmed = confirm(`💳 UPI APP OPENING\n\nDid ${appName.toUpperCase()} app open successfully?\n\nIf YES:\n- Complete the payment in the app\n- Return here and click OK\n\nIf NO:\n- Click Cancel to try manual payment\n\nAmount: ₹${amount}\nUPI ID: ${upiId}`);
+      
+      if (confirmed) {
+        // User confirms app opened and payment completed
+        confirmPayment();
+      } else {
+        // Show manual payment options
+        showManualPaymentInstructions(upiId, amount, 'Lingam Manoj Kumar', appName);
+      }
+    }
+
+    function showManualPaymentInstructions(upiId, amount, merchantName, appName) {
+      alert(`📱 MANUAL PAYMENT INSTRUCTIONS\n\n${appName.toUpperCase()} didn't open? No problem!\n\nManual Steps:\n1. Open any UPI app manually\n2. Select "Pay to UPI ID" or "Send Money"\n3. Enter UPI ID: ${upiId}\n4. Enter amount: ₹${amount}\n5. Enter merchant: ${merchantName}\n6. Complete payment\n7. Return here and click "I've Completed Payment"`);
+    }
+
+    function showDesktopPaymentInstructions(upiId, amount, merchantName, appName) {
+      alert(`💻 DESKTOP PAYMENT INSTRUCTIONS\n\nUPI apps work only on mobile devices.\n\nFor desktop payment:\n\n📱 Use your mobile phone:\n1. Open ${appName.toUpperCase()} or any UPI app on your phone\n2. Select "Pay to UPI ID"\n3. Enter UPI ID: ${upiId}\n4. Enter amount: ₹${amount}\n5. Complete payment\n\n📱 OR scan the QR code above with your phone\n\nAfter payment, return here and click "I've Completed Payment"`);
+    }
+
+    function copyToClipboard(text, button) {
+      navigator.clipboard.writeText(text).then(function() {
+        // Show success feedback
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+        
+        console.log('📋 Copied to clipboard:', text);
+      }).catch(function(err) {
+        console.error('❌ Could not copy text:', err);
+        alert('Could not copy to clipboard. Please copy manually: ' + text);
+      });
+    }
+
+    function copyAmount(button) {
+      const amount = document.getElementById('manualAmount')?.textContent || '75';
+      copyToClipboard(amount, button);
+    }
+
+    function verifyAndPayWithUPI() {
+      const amount = document.getElementById('totalAmount')?.textContent || '75';
+      const passType = document.getElementById('passType')?.textContent || 'Daily Pass';
+      const route = document.getElementById('route')?.textContent || 'City Route';
+      const upiIdInput = document.getElementById('upiIdInput');
+      const upiPayResultBox = document.getElementById('upiPayResultBox');
+      const payBtn = document.getElementById('upiVerifyPayBtn');
+      
+      if (!upiIdInput) return;
+      const upiId = upiIdInput.value.trim();
+      if (!upiId) {
+        showUpiPaymentMessage('failure', 'Please enter your PhonePe UPI ID before verifying payment.');
+        upiIdInput.focus();
+        return;
+      }
+      if (!isValidUpiId(upiId)) {
+        showUpiPaymentMessage('failure', 'Please enter a valid UPI ID such as example@okaxis.');
+        upiIdInput.focus();
+        return;
+      }
+      
+      showUpiPaymentMessage('info', `Verifying UPI ID ${upiId} and processing payment for ₹${amount}...`);
+      payBtn.disabled = true;
+      payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+      
+      // Simulated verification delay to resemble a real payment gateway
+      setTimeout(() => {
+        processPaymentCompletion(amount, passType, route, upiId);
+      }, 900);
+    }
+
+    function isValidUpiId(upiId) {
+      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{3,64}$/;
+      return upiRegex.test(upiId);
+    }
+
+    function showUpiPaymentMessage(status, message) {
+      const resultBox = document.getElementById('upiPayResultBox');
+      if (!resultBox) return;
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = message;
+      resultBox.className = status === 'success' ? 'success-box' : status === 'failure' ? 'error-box' : 'info-box';
+    }
+
+    function resetUpiPaymentMessage() {
+      const resultBox = document.getElementById('upiPayResultBox');
+      if (!resultBox) return;
+      resultBox.style.display = 'none';
+      resultBox.innerHTML = '';
+      resultBox.className = 'info-box';
+    }
+
+    function confirmPayment() {
+      console.log('🔍 Starting payment confirmation...');
+      
+      const amount = document.getElementById('totalAmount')?.textContent || '75';
+      const passType = document.getElementById('passType')?.textContent || 'Daily Pass';
+      const route = document.getElementById('route')?.textContent || 'City Route';
+      
+      // Show confirmation dialog
+      const confirmed = confirm(`💳 PAYMENT CONFIRMATION\n\nHave you completed the UPI payment?\n\nAmount: ₹${amount}\nTo: 8340927497@ibl\nFor: Smart Bus ${passType}\n\n✅ Check your UPI app transaction history\n✅ Verify money was deducted from your account\n✅ Confirm payment shows as successful\n\nClick OK ONLY if you have actually sent the money.`);
+      
+      if (!confirmed) {
+        console.log('❌ Payment not confirmed by user');
+        return;
+      }
+      
+      // Process payment completion
+      processPaymentCompletion(amount, passType, route);
+    }
+
+    function processPaymentCompletion(amount, passType, route, upiId = '') {
+      console.log('🎉 Processing payment completion...', { upiId });
+      
+      // Show processing overlay
+      showProcessingOverlay();
+      
+      // Get user information
+      const userEmail = localStorage.getItem('userEmail') || 'mk4829779@gmail.com';
+      const userName = localStorage.getItem('userName') || 'Smart Bus User';
+      const routeDistance = localStorage.getItem('routeDistance') || '0';
+      
+      // Create pass data for storage
+      const passData = {
+        id: Date.now(),
+        type: passType,
+        price: `₹${amount}`,
+        route: route,
+        distance: routeDistance,
+        purchaseDate: new Date().toISOString(),
+        expiryDate: calculateExpiryDate(passType),
+        status: 'active',
+        paymentMethod: upiId ? `UPI (${upiId})` : 'UPI',
+        transactionId: `TXN${Date.now()}`,
+        upiId: upiId || '8340927497@ibl'
+      };
+      
+      // Store pass locally for immediate display
+      storePassLocally(passData);
+      
+      // Call backend to complete payment
+      fetch('/complete-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pass_type: passType,
+          amount: amount,
+          route: route,
+          distance: routeDistance,
+          payment_method: 'UPI Real-time',
+          transaction_type: 'new_pass',
+          device_type: localStorage.getItem('deviceType') || 'Web',
+          user_email: userEmail,
+          user_name: userName,
+          pass_data: passData
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        hideProcessingOverlay();
+        
+        if (data.success) {
+          console.log('✅ Payment completed successfully:', data);
+          showUpiPaymentMessage('success', 'Payment successful! Your pass is being activated and email receipt is being sent.');
+          showPaymentSuccess(data.receipt);
+        } else {
+          throw new Error(data.error || 'Payment completion failed');
+        }
+      })
+      .catch(error => {
+        hideProcessingOverlay();
+        console.error('❌ Payment completion failed:', error);
+        showPaymentError(error.message);
+      });
+    }
+
+    function calculateExpiryDate(passType) {
+      const now = new Date();
+      const expiry = new Date(now);
+      
+      switch(passType) {
+        case 'Daily Pass':
+          expiry.setDate(now.getDate() + 1);
+          break;
+        case 'Weekly Pass':
+          expiry.setDate(now.getDate() + 7);
+          break;
+        case 'Monthly Pass':
+        case 'Student Monthly Pass':
+          expiry.setMonth(now.getMonth() + 1);
+          break;
+        case 'Quarterly Pass':
+          expiry.setMonth(now.getMonth() + 3);
+          break;
+        case 'Annual Pass':
+          expiry.setFullYear(now.getFullYear() + 1);
+          break;
+        default:
+          expiry.setDate(now.getDate() + 1);
+      }
+      
+      return expiry.toISOString();
+    }
+
+    function storePassLocally(passData) {
+      const userEmail = localStorage.getItem('userEmail');
+      
+      // Store pass in localStorage
+      let userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      userPasses.push(passData);
+      localStorage.setItem('userPasses', JSON.stringify(userPasses));
+      
+      // Update user stats
+      const userStats = JSON.parse(localStorage.getItem('userStats') || '{}');
+      userStats.totalSpent = (userStats.totalSpent || 0) + parseInt(passData.price.replace('₹', '').replace(',', ''));
+      userStats.totalPasses = (userStats.totalPasses || 0) + 1;
+      localStorage.setItem('userStats', JSON.stringify(userStats));
+      
+      // Add notification
+      const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      notifications.unshift({
+        id: Date.now(),
+        type: 'success',
+        title: 'Payment Successful',
+        message: `✅ Your ${passData.type} has been activated! Transaction ID: ${passData.transactionId}`,
+        date: new Date().toISOString(),
+        read: false
+      });
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+      
+      // SAVE TO BACKEND DATABASE (so it persists after logout)
+      if (userEmail) {
+        savePassToBackend(userEmail, passData);
+      }
+      
+      // AUTOMATICALLY SEND RECEIPT EMAIL
+      sendReceiptEmail(passData);
+      
+      console.log('✅ Pass stored locally:', passData);
+    }
+
+    function savePassToBackend(email, passData) {
+      console.log('💾 Saving pass to backend database...');
+      
+      fetch('/save-user-pass', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          pass: passData
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('✅ Pass saved to backend database');
+        } else {
+          console.log('❌ Failed to save pass to backend:', data.error);
+        }
+      })
+      .catch(error => {
+        console.log('❌ Backend save request failed:', error);
+      });
+    }
+
+    function sendReceiptEmail(passData) {
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!userEmail) {
+        console.log('⚠️ No user email found, skipping receipt email');
+        return;
+      }
+
+      console.log('📧 Sending receipt email to:', userEmail);
+
+      // Send to backend
+      fetch('/send-payment-confirmation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          pass: passData
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('✅ Receipt email sent successfully to:', userEmail);
+          
+          // Add email notification
+          const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+          notifications.unshift({
+            id: Date.now() + 1,
+            type: 'info',
+            title: 'Receipt Sent',
+            message: `📧 Receipt emailed to ${userEmail}`,
+            date: new Date().toISOString(),
+            read: false
+          });
+          localStorage.setItem('notifications', JSON.stringify(notifications));
+        } else {
+          console.log('❌ Failed to send receipt email:', data.error);
+        }
+      })
+      .catch(error => {
+        console.log('❌ Receipt email request failed:', error);
+      });
+    }
+
+    function showProcessingOverlay() {
+      const overlay = document.createElement('div');
+      overlay.id = 'processingOverlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(76, 175, 80, 0.95);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+        font-family: 'Segoe UI', sans-serif;
+      `;
+      
+      overlay.innerHTML = `
+        <div>
+          <div style="width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.3); border-top: 6px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
+          <h2 style="margin: 0 0 10px 0; font-size: 1.8em;">Processing Payment...</h2>
+          <p style="font-size: 1.1em; margin: 0; opacity: 0.9;">Generating receipt and activating your pass</p>
+        </div>
+        <style>
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      `;
+      
+      document.body.appendChild(overlay);
+    }
+
+    function hideProcessingOverlay() {
+      const overlay = document.getElementById('processingOverlay');
+      if (overlay) {
+        document.body.removeChild(overlay);
+      }
+    }
+
+    function showPaymentSuccess(receipt) {
+      // Show success overlay
+      const successOverlay = document.getElementById('successOverlay');
+      if (successOverlay) {
+        // Update success details
+        const successDetails = document.getElementById('successDetails');
+        if (successDetails) {
+          successDetails.innerHTML = `
+            <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
+              <p><strong>Receipt #:</strong> ${receipt.receipt_number}</p>
+              <p><strong>Pass Type:</strong> ${receipt.pass_type}</p>
+              <p><strong>Amount:</strong> ₹${receipt.amount}</p>
+              <p><strong>Valid Until:</strong> ${receipt.expiry_date}</p>
+            </div>
+            <button onclick="goToDashboard()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 15px 30px; border-radius: 25px; cursor: pointer; font-size: 16px; margin: 10px;">
+              🚌 Go to Dashboard
+            </button>
+            <button onclick="downloadReceipt()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 15px 30px; border-radius: 25px; cursor: pointer; font-size: 16px; margin: 10px;">
+              📄 Download Receipt
+            </button>
+          `;
+        }
+        
+        successOverlay.style.display = 'flex';
+        
+        // Store receipt for download
+        localStorage.setItem('lastReceipt', JSON.stringify(receipt));
+        
+        // Clear selection data
+        clearPaymentData();
+      }
+    }
+
+    function showPaymentError(errorMessage) {
+      const payBtn = document.getElementById('upiVerifyPayBtn');
+      if (payBtn) {
+        payBtn.disabled = false;
+        payBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify & Pay';
+      }
+      showUpiPaymentMessage('failure', `Payment processing failed: ${errorMessage}. Please try again or contact support.`);
+    }
+
+    function clearPaymentData() {
+      localStorage.removeItem('selectedPass');
+      localStorage.removeItem('selectedPrice');
+      localStorage.removeItem('selectedRoute');
+      localStorage.removeItem('calculatedFare');
+      localStorage.removeItem('routeDistance');
+    }
+
+    function goToDashboard() {
+      // Set flag to indicate user just purchased a pass
+      sessionStorage.setItem('justPurchasedPass', 'true');
+      window.location.href = '/dashboard';
+    }
+
+    function downloadReceipt() {
+      const receipt = JSON.parse(localStorage.getItem('lastReceipt') || '{}');
+      
+      const receiptContent = `
+SMART BUS - DIGITAL RECEIPT
+============================
+
+Receipt Number: ${receipt.receipt_number}
+Transaction ID: ${receipt.transaction_id}
+Date: ${receipt.date}
+
+PASSENGER DETAILS
+-----------------
+Name: ${receipt.user_name}
+Email: ${receipt.user_email}
+
+PASS INFORMATION
+----------------
+Pass Type: ${receipt.pass_type}
+Amount: ₹${receipt.amount}
+Route: ${receipt.route}
+Distance: ${receipt.distance} km
+Valid From: ${receipt.purchase_date}
+Valid Until: ${receipt.expiry_date}
+
+PAYMENT DETAILS
+---------------
+Method: ${receipt.payment_method}
+Merchant: ${receipt.merchant_name}
+UPI ID: ${receipt.merchant_upi}
+Status: ${receipt.status}
+
+============================
+Thank you for choosing Smart Bus!
+Visit: http://localhost:5000/dashboard
+      `;
+      
+      const blob = new Blob([receiptContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SmartBus_Receipt_${receipt.receipt_number}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('📄 Receipt downloaded');
+    }
+
+    function updatePaymentStatus(status, message) {
+      const statusElement = document.querySelector('.live-indicator');
+      if (statusElement) {
+        statusElement.innerHTML = `
+          <div class="live-dot"></div>
+          ${message}
+        `;
+      }
+    }
+
+    // Legacy functions for backward compatibility
+    function showPaymentOptions() {
+      console.log('🔘 Legacy payment method selection - redirecting to real-time system');
+      switchPaymentMethod('apps');
+    }
+
+    function selectUPI(method) {
+      console.log('🔘 Legacy UPI selection - using real-time system');
+      openUPIApp(method);
+    }
+
+    function processUPIPayment() {
+      console.log('🔘 Legacy UPI processing - using real-time system');
+      confirmPayment();
+    }
+
+    function closeUPIModal() {
+      console.log('🔘 Legacy modal close');
+      // No modal to close in real-time system
+    }
+
+    // Close modal when clicking outside (legacy support)
+    window.onclick = function(event) {
+      // No modals in real-time system
+    }
+
+    function showUPIRedirectionModal(paymentData) {
+      // Create UPI redirection modal
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      `;
+      
+      modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; text-align: center;">
+          <div style="font-size: 3em; margin-bottom: 20px;">📱</div>
+          <h3>UPI Payment Redirect</h3>
+          <p>Opening ${paymentData.app.toUpperCase()} app for payment...</p>
+          
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>Pay to:</strong> ${paymentData.merchant_name}</p>
+            <p><strong>UPI ID:</strong> ${paymentData.upi_id}</p>
+            <p><strong>Amount:</strong> ₹${paymentData.amount}</p>
+          </div>
+          
+          <div style="margin-top: 20px;">
+            <button onclick="confirmPaymentSuccess()" style="background: #4CAF50; color: white; border: none; padding: 12px 25px; border-radius: 25px; margin: 5px; cursor: pointer;">
+              ✅ Payment Completed
+            </button>
+            <button onclick="closeUPIRedirectionModal()" style="background: #f44336; color: white; border: none; padding: 12px 25px; border-radius: 25px; margin: 5px; cursor: pointer;">
+              ❌ Cancel Payment
+            </button>
+          </div>
+          
+          <p style="font-size: 12px; color: #666; margin-top: 15px;">
+            If the app doesn't open automatically, use the UPI ID above to pay manually.
+          </p>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      window.currentUPIModal = modal;
+    }
+
+    function showManualUPIDetails(paymentData) {
+      // Show manual UPI payment details if app doesn't open
+      if (window.currentUPIModal) {
+        const modalContent = window.currentUPIModal.querySelector('div > div');
+        modalContent.innerHTML = `
+          <div style="font-size: 3em; margin-bottom: 20px;">💳</div>
+          <h3>Manual UPI Payment</h3>
+          <p>App didn't open? Pay manually using these details:</p>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
+            <p><strong>Merchant Name:</strong> ${paymentData.merchant_name}</p>
+            <p><strong>UPI ID:</strong> ${paymentData.upi_id}</p>
+            <p><strong>Phone Number:</strong> 8340927497</p>
+            <p><strong>Amount:</strong> ₹${paymentData.amount}</p>
+            <p><strong>Description:</strong> Smart Bus Pass Payment</p>
+          </div>
+          
+          <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 14px; color: #856404;">
+              <strong>Instructions:</strong><br>
+              1. Open any UPI app (PhonePe, GPay, Paytm, etc.)<br>
+              2. Select "Pay to UPI ID" or "Send Money"<br>
+              3. Enter UPI ID: ${paymentData.upi_id}<br>
+              4. Enter amount: ₹${paymentData.amount}<br>
+              5. Complete the payment
+            </p>
+          </div>
+          
+          <div style="margin-top: 20px;">
+            <button onclick="confirmPaymentSuccess()" style="background: #4CAF50; color: white; border: none; padding: 12px 25px; border-radius: 25px; margin: 5px; cursor: pointer;">
+              ✅ Payment Completed
+            </button>
+            <button onclick="closeUPIRedirectionModal()" style="background: #f44336; color: white; border: none; padding: 12px 25px; border-radius: 25px; margin: 5px; cursor: pointer;">
+              ❌ Cancel Payment
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function confirmPaymentSuccess() {
+      // User confirms payment was successful
+      closeUPIRedirectionModal();
+      completePayment();
+    }
+
+    function closeUPIRedirectionModal() {
+      if (window.currentUPIModal) {
+        document.body.removeChild(window.currentUPIModal);
+        window.currentUPIModal = null;
+      }
+      
+      // Reset payment button
+      const payBtn = document.getElementById('upiPayBtn');
+      payBtn.innerHTML = '<i class="fas fa-credit-card"></i> Pay ₹<span id="upiPayAmount">0</span>';
+      payBtn.style.background = '';
+      payBtn.disabled = false;
+    }
+  </script>
+</body>
+</html>

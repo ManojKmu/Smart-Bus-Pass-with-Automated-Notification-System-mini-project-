@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Smart Bus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .payment-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .payment-header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .payment-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+        }
+
+        .payment-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .payment-body {
+            padding: 40px;
+        }
+
+        .order-summary {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .order-summary h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .summary-row.total {
+            border-top: 2px solid #4CAF50;
+            margin-top: 15px;
+            padding-top: 15px;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #4CAF50;
+        }
+
+        .device-detection {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .device-detection.mobile {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .device-detection.desktop {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .payment-methods {
+            display: grid;
+            gap: 20px;
+        }
+
+        .payment-section {
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .payment-section:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.1);
+        }
+
+        .payment-section h4 {
+            margin: 0 0 15px 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upi-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .upi-option {
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upi-option:hover {
+            border-color: #4CAF50;
+            background: #f0fff0;
+        }
+
+        .upi-option.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+
+        .upi-option i {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .upi-option h5 {
+            margin: 0;
+            color: #333;
+        }
+
+        .qr-section {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: white;
+            border: 2px dashed #4CAF50;
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            color: #4CAF50;
+        }
+
+        .upi-details {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .upi-details h5 {
+            margin: 0 0 15px 0;
+            color: #1976d2;
+        }
+
+        .upi-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background: #1976D2;
+        }
+
+        .manual-instructions {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .manual-instructions h5 {
+            margin: 0 0 15px 0;
+            color: #f57c00;
+        }
+
+        .manual-instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .manual-instructions li {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .payment-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .payment-body {
+                padding: 20px;
+            }
+            
+            .upi-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="payment-header">
+            <a href="/route" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <h1><i class="fas fa-credit-card"></i> Complete Payment</h1>
+            <p>Choose your preferred payment method</p>
+        </div>
+
+        <div class="payment-body">
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h3><i class="fas fa-receipt"></i> Order Summary</h3>
+                <div class="summary-row">
+                    <span>Pass Type:</span>
+                    <span id="passType">Loading...</span>
+                </div>
+                <div class="summary-row">
+                    <span>Route:</span>
+                    <span id="routeInfo">Loading...</span>
+                </div>
+                <div class="summary-row">
+                    <span>Distance:</span>
+                    <span id="distanceInfo">Loading...</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total Amount:</span>
+                    <span id="totalAmount">Loading...</span>
+                </div>
+            </div>
+
+            <!-- Device Detection -->
+            <div id="deviceDetection" class="device-detection">
+                <i class="fas fa-info-circle"></i>
+                <strong>Device Detected:</strong> <span id="deviceType">Detecting...</span>
+            </div>
+
+            <!-- Mobile Payment Section -->
+            <div id="mobilePayment" class="payment-section" style="display: none;">
+                <h4><i class="fas fa-mobile-alt"></i> Mobile UPI Payment (Recommended)</h4>
+                <p>Select your UPI app to pay directly:</p>
+                
+                <div class="upi-options">
+                    <div class="upi-option" onclick="openUPIApp('phonepe')">
+                        <i class="fas fa-mobile-alt" style="color: #5f259f;"></i>
+                        <h5>PhonePe</h5>
+                    </div>
+                    <div class="upi-option" onclick="openUPIApp('gpay')">
+                        <i class="fab fa-google-pay" style="color: #4285f4;"></i>
+                        <h5>Google Pay</h5>
+                    </div>
+                    <div class="upi-option" onclick="openUPIApp('paytm')">
+                        <i class="fas fa-wallet" style="color: #00baf2;"></i>
+                        <h5>Paytm</h5>
+                    </div>
+                    <div class="upi-option" onclick="openUPIApp('bhim')">
+                        <i class="fas fa-university" style="color: #ff6b35;"></i>
+                        <h5>BHIM UPI</h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop Payment Section -->
+            <div id="desktopPayment" class="payment-section">
+                <h4><i class="fas fa-laptop"></i> Desktop UPI Payment Options</h4>
+                
+                <!-- Option 1: QR Code -->
+                <div class="qr-section">
+                    <h5><i class="fas fa-qrcode"></i> Option 1: Scan QR Code with Mobile</h5>
+                    <div class="qr-placeholder">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <p>Open any UPI app on your mobile and scan this QR code</p>
+                    <button class="btn btn-secondary" onclick="generateQRCode()">
+                        <i class="fas fa-qrcode"></i> Generate QR Code
+                    </button>
+                </div>
+
+                <!-- Option 2: Manual UPI -->
+                <div class="upi-details">
+                    <h5><i class="fas fa-copy"></i> Option 2: Manual UPI Transfer</h5>
+                    <div class="upi-detail-row">
+                        <span><strong>UPI ID:</strong></span>
+                        <span>8340927497@ibl <button class="copy-btn" onclick="copyToClipboard('8340927497@ibl')">Copy</button></span>
+                    </div>
+                    <div class="upi-detail-row">
+                        <span><strong>Name:</strong></span>
+                        <span>Lingam Manoj Kumar</span>
+                    </div>
+                    <div class="upi-detail-row">
+                        <span><strong>Amount:</strong></span>
+                        <span id="upiAmount">₹0 <button class="copy-btn" onclick="copyAmount()">Copy</button></span>
+                    </div>
+                    <div class="upi-detail-row">
+                        <span><strong>Reference:</strong></span>
+                        <span id="upiReference">Smart Bus Pass</span>
+                    </div>
+                </div>
+
+                <!-- Manual Instructions -->
+                <div class="manual-instructions">
+                    <h5><i class="fas fa-list-ol"></i> How to Pay Manually:</h5>
+                    <ol>
+                        <li>Open any UPI app on your mobile (PhonePe, GPay, Paytm, etc.)</li>
+                        <li>Select "Send Money" or "Pay to Contact"</li>
+                        <li>Enter UPI ID: <strong>8340927497@ibl</strong></li>
+                        <li>Enter Amount: <strong id="manualAmount">₹0</strong></li>
+                        <li>Add Reference: <strong>Smart Bus Pass</strong></li>
+                        <li>Complete the payment</li>
+                        <li>Click "I've Completed Payment" below</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Web UPI Section -->
+            <div class="payment-section">
+                <h4><i class="fas fa-globe"></i> Web UPI Payment (Beta)</h4>
+                <p>Some banks offer web UPI services:</p>
+                
+                <div class="upi-options">
+                    <div class="upi-option" onclick="openWebUPI('sbi')">
+                        <i class="fas fa-university" style="color: #1f4e79;"></i>
+                        <h5>SBI Web UPI</h5>
+                    </div>
+                    <div class="upi-option" onclick="openWebUPI('hdfc')">
+                        <i class="fas fa-university" style="color: #004c8f;"></i>
+                        <h5>HDFC Web UPI</h5>
+                    </div>
+                    <div class="upi-option" onclick="openWebUPI('icici')">
+                        <i class="fas fa-university" style="color: #f47920;"></i>
+                        <h5>ICICI Web UPI</h5>
+                    </div>
+                </div>
+                
+                <p style="font-size: 14px; color: #666; margin-top: 15px;">
+                    <i class="fas fa-info-circle"></i> 
+                    Web UPI availability depends on your bank. Check your bank's website for web UPI services.
+                </p>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message">
+                <i class="fas fa-check-circle" style="font-size: 2em; margin-bottom: 10px;"></i>
+                <h4>Payment Successful!</h4>
+                <p>Your bus pass has been activated. Check your email for the receipt.</p>
+            </div>
+
+            <!-- Payment Buttons -->
+            <div class="payment-buttons">
+                <button class="btn btn-primary" onclick="confirmPayment()">
+                    <i class="fas fa-check"></i> I've Completed Payment
+                </button>
+                <button class="btn btn-secondary" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i> Go Back
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detect device type
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+            
+            const deviceDetection = document.getElementById('deviceDetection');
+            const deviceType = document.getElementById('deviceType');
+            const mobilePayment = document.getElementById('mobilePayment');
+            
+            if (isMobile) {
+                deviceType.textContent = 'Mobile Device - UPI apps available';
+                deviceDetection.className = 'device-detection mobile';
+                mobilePayment.style.display = 'block';
+            } else {
+                deviceType.textContent = 'Desktop/Laptop - UPI apps not available';
+                deviceDetection.className = 'device-detection desktop';
+                mobilePayment.style.display = 'none';
+            }
+        }
+
+        // Load order data
+        function loadOrderData() {
+            // Get data from localStorage or URL parameters
+            const passType = localStorage.getItem('selectedPass') || 'Daily Pass';
+            const price = localStorage.getItem('selectedPrice') || '₹75';
+            const route = localStorage.getItem('selectedRoute') || 'City Route';
+            const distance = localStorage.getItem('routeDistance') || '5.0';
+
+            document.getElementById('passType').textContent = passType;
+            document.getElementById('routeInfo').textContent = route;
+            document.getElementById('distanceInfo').textContent = distance + ' km';
+            document.getElementById('totalAmount').textContent = price;
+            document.getElementById('upiAmount').textContent = price;
+            document.getElementById('manualAmount').textContent = price;
+        }
+
+        // Open UPI app (mobile only)
+        function openUPIApp(app) {
+            const amount = localStorage.getItem('selectedPrice')?.replace('₹', '') || '75';
+            const upiId = '8340927497@ibl';
+            const merchantName = 'Lingam Manoj Kumar';
+            const note = 'Smart Bus Pass Payment';
+
+            let upiUrl = '';
+            
+            switch(app) {
+                case 'phonepe':
+                    upiUrl = `phonepe://pay?pa=${upiId}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}`;
+                    break;
+                case 'gpay':
+                    upiUrl = `tez://upi/pay?pa=${upiId}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}`;
+                    break;
+                case 'paytm':
+                    upiUrl = `paytmmp://pay?pa=${upiId}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}`;
+                    break;
+                case 'bhim':
+                    upiUrl = `bhim://pay?pa=${upiId}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}`;
+                    break;
+            }
+
+            // Try to open UPI app
+            window.location.href = upiUrl;
+            
+            // Show fallback message after 2 seconds
+            setTimeout(() => {
+                alert(`If ${app.toUpperCase()} didn't open automatically, please:\n1. Open ${app.toUpperCase()} manually\n2. Pay to UPI ID: ${upiId}\n3. Amount: ₹${amount}\n4. Click "I've Completed Payment" below`);
+            }, 2000);
+        }
+
+        // Generate QR Code
+        function generateQRCode() {
+            const amount = localStorage.getItem('selectedPrice')?.replace('₹', '') || '75';
+            const upiId = '8340927497@ibl';
+            const merchantName = 'Lingam Manoj Kumar';
+            const note = 'Smart Bus Pass Payment';
+            
+            // UPI URL for QR code
+            const upiUrl = `upi://pay?pa=${upiId}&pn=${merchantName}&am=${amount}&cu=INR&tn=${note}`;
+            
+            // Use QR code API (you can replace with your preferred QR service)
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+            
+            const qrPlaceholder = document.querySelector('.qr-placeholder');
+            qrPlaceholder.innerHTML = `<img src="${qrApiUrl}" alt="UPI QR Code" style="max-width: 100%; height: auto;">`;
+        }
+
+        // Open Web UPI
+        function openWebUPI(bank) {
+            const webUpiUrls = {
+                'sbi': 'https://www.onlinesbi.com',
+                'hdfc': 'https://netbanking.hdfcbank.com',
+                'icici': 'https://www.icicibank.com'
+            };
+            
+            const url = webUpiUrls[bank];
+            if (url) {
+                window.open(url, '_blank');
+                alert(`Please log in to your ${bank.toUpperCase()} net banking and use their UPI service to pay ₹${localStorage.getItem('selectedPrice')?.replace('₹', '') || '75'} to UPI ID: 8340927497@ibl`);
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`Copied: ${text}`);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert(`Copied: ${text}`);
+            });
+        }
+
+        // Copy amount
+        function copyAmount() {
+            const amount = localStorage.getItem('selectedPrice')?.replace('₹', '') || '75';
+            copyToClipboard(amount);
+        }
+
+        // Confirm payment
+        function confirmPayment() {
+            // Get payment details
+            const passType = localStorage.getItem('selectedPass') || 'Daily Pass';
+            const price = localStorage.getItem('selectedPrice') || '₹75';
+            const route = localStorage.getItem('selectedRoute') || 'City Route';
+            const distance = localStorage.getItem('routeDistance') || '5.0';
+            
+            // Show success message
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Create pass data
+            const passData = {
+                id: Date.now(),
+                type: passType,
+                price: price,
+                route: route,
+                distance: distance,
+                purchaseDate: new Date().toISOString(),
+                expiryDate: calculateExpiryDate(passType),
+                status: 'active',
+                paymentMethod: 'UPI',
+                transactionId: 'TXN' + Date.now()
+            };
+            
+            // Store pass in localStorage
+            let userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+            userPasses.push(passData);
+            localStorage.setItem('userPasses', JSON.stringify(userPasses));
+            
+            // Send pass data to backend for email and notifications
+            sendPassToBackend(passData);
+            
+            // Scroll to success message
+            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+            
+            // Redirect after 3 seconds
+            setTimeout(() => {
+                window.location.href = '/passes';
+            }, 3000);
+        }
+        
+        // Calculate expiry date based on pass type
+        function calculateExpiryDate(passType) {
+            const now = new Date();
+            const expiry = new Date(now);
+            
+            switch(passType) {
+                case 'Daily Pass':
+                    expiry.setDate(now.getDate() + 1);
+                    break;
+                case 'Weekly Pass':
+                    expiry.setDate(now.getDate() + 7);
+                    break;
+                case 'Monthly Pass':
+                case 'Student Monthly Pass':
+                    expiry.setMonth(now.getMonth() + 1);
+                    break;
+                case 'Quarterly Pass':
+                    expiry.setMonth(now.getMonth() + 3);
+                    break;
+                case 'Annual Pass':
+                    expiry.setFullYear(now.getFullYear() + 1);
+                    break;
+                default:
+                    expiry.setDate(now.getDate() + 1);
+            }
+            
+            return expiry.toISOString();
+        }
+        
+        // Send pass data to backend
+        function sendPassToBackend(passData) {
+            const userEmail = localStorage.getItem('userEmail') || 'mk4829779@gmail.com';
+            const userName = localStorage.getItem('userName') || 'Smart Bus User';
+            
+            fetch('/complete-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    pass_type: passData.type,
+                    amount: passData.price.replace('₹', ''),
+                    route: passData.route,
+                    distance: passData.distance,
+                    payment_method: 'UPI',
+                    transaction_type: 'new_pass',
+                    device_type: 'Web',
+                    user_email: userEmail,
+                    user_name: userName,
+                    pass_data: passData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Pass saved to backend:', data);
+            })
+            .catch(error => {
+                console.error('Error saving pass:', error);
+            });
+        }
+
+        // Go back
+        function goBack() {
+            window.history.back();
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            detectDevice();
+            loadOrderData();
+        });
+    </script>
+</body>
+</html>

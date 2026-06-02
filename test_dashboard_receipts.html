@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard Receipts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        .test-result {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+        .error {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Dashboard Receipts Test</h1>
+        <p>This page tests the receipt functionality in the dashboard "My Passes" section.</p>
+        
+        <h3>Test Actions:</h3>
+        <button class="test-button" onclick="createSamplePasses()">Create Sample Passes</button>
+        <button class="test-button" onclick="testReceiptDisplay()">Test Receipt Display</button>
+        <button class="test-button" onclick="clearAllPasses()">Clear All Passes</button>
+        <button class="test-button" onclick="goToDashboard()">Go to Dashboard</button>
+        
+        <div id="testResults"></div>
+        
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click "Create Sample Passes" to add test passes to localStorage</li>
+            <li>Click "Go to Dashboard" to open the main dashboard</li>
+            <li>Click on "My Passes" in the sidebar to see receipt display</li>
+            <li>Verify that receipts show complete transaction details</li>
+            <li>Test download and share functionality</li>
+        </ol>
+        
+        <h3>Expected Receipt Features:</h3>
+        <ul>
+            <li>✅ Complete pass details (type, route, dates)</li>
+            <li>✅ Receipt number (SB + Pass ID)</li>
+            <li>✅ Payment information (method, merchant)</li>
+            <li>✅ Distance information (for distance-based passes)</li>
+            <li>✅ Expiry status with visual indicators</li>
+            <li>✅ Download receipt functionality</li>
+            <li>✅ Share receipt functionality</li>
+            <li>✅ Renew button for expiring passes</li>
+        </ul>
+    </div>
+
+    <script>
+        function createSamplePasses() {
+            const samplePasses = [
+                {
+                    id: Date.now(),
+                    type: 'Monthly Pass',
+                    price: '₹1,000',
+                    route: 'City Center → Airport',
+                    routeDistance: '25.2',
+                    purchaseDate: new Date().toISOString(),
+                    expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'active',
+                    paymentMethod: 'PhonePe',
+                    merchantName: 'Lingam Manoj Kumar',
+                    merchantPhone: '8340927497',
+                    receiptNumber: `SB${Date.now()}`
+                },
+                {
+                    id: Date.now() + 1,
+                    type: 'Daily Pass',
+                    price: '₹45',
+                    route: 'University → Shopping Mall',
+                    routeDistance: '8.5',
+                    purchaseDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                    expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Expires in 2 days
+                    status: 'active',
+                    paymentMethod: 'Google Pay',
+                    merchantName: 'Lingam Manoj Kumar',
+                    merchantPhone: '8340927497',
+                    receiptNumber: `SB${Date.now() + 1}`
+                },
+                {
+                    id: Date.now() + 2,
+                    type: 'Weekly Pass',
+                    price: '₹300',
+                    route: 'Railway Station → Tech Park',
+                    routeDistance: null,
+                    purchaseDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+                    expiryDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Expired
+                    status: 'expired',
+                    paymentMethod: 'Paytm',
+                    merchantName: 'Lingam Manoj Kumar',
+                    merchantPhone: '8340927497',
+                    receiptNumber: `SB${Date.now() + 2}`
+                }
+            ];
+            
+            localStorage.setItem('userPasses', JSON.stringify(samplePasses));
+            
+            // Also set user info
+            localStorage.setItem('userName', 'Test User');
+            localStorage.setItem('userEmail', 'test@example.com');
+            
+            showResult('✅ Sample passes created successfully!', 'success');
+        }
+        
+        function testReceiptDisplay() {
+            const passes = JSON.parse(localStorage.getItem('userPasses') || '[]');
+            
+            if (passes.length === 0) {
+                showResult('❌ No passes found. Create sample passes first.', 'error');
+                return;
+            }
+            
+            let testResults = '✅ Receipt Display Test Results:\n\n';
+            
+            passes.forEach((pass, index) => {
+                testResults += `Pass ${index + 1}:\n`;
+                testResults += `- Receipt Number: ${pass.receiptNumber || 'SB' + pass.id}\n`;
+                testResults += `- Type: ${pass.type}\n`;
+                testResults += `- Route: ${pass.route}\n`;
+                testResults += `- Distance: ${pass.routeDistance || 'N/A'} km\n`;
+                testResults += `- Payment Method: ${pass.paymentMethod}\n`;
+                testResults += `- Status: ${pass.status}\n`;
+                testResults += `- Expiry: ${new Date(pass.expiryDate).toLocaleDateString()}\n\n`;
+            });
+            
+            showResult(testResults, 'success');
+        }
+        
+        function clearAllPasses() {
+            localStorage.removeItem('userPasses');
+            localStorage.removeItem('userStats');
+            localStorage.removeItem('notifications');
+            showResult('✅ All passes and data cleared!', 'success');
+        }
+        
+        function goToDashboard() {
+            window.open('/dashboard', '_blank');
+        }
+        
+        function showResult(message, type) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = `<pre>${message}</pre>`;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        // Auto-create sample passes on page load for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('🧪 Dashboard Receipts Test Ready!\n\nClick "Create Sample Passes" to start testing.', 'success');
+        });
+    </script>
+</body>
+</html>

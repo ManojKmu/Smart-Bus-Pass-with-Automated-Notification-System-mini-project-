@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug Passes - Smart Bus</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .success { color: green; }
+    .error { color: red; }
+    .info { color: blue; }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    pre {
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Pass Debug Tool</h1>
+  
+  <div class="section">
+    <h2>1. Check Email in localStorage</h2>
+    <button onclick="checkEmail()">Check Email</button>
+    <div id="emailResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>2. Fetch Passes from Backend</h2>
+    <button onclick="fetchPasses()">Fetch Passes</button>
+    <div id="passesResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>3. Check localStorage Passes</h2>
+    <button onclick="checkLocalStorage()">Check localStorage</button>
+    <div id="localStorageResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>4. Test Database Connection</h2>
+    <button onclick="testDatabase()">Test Database</button>
+    <div id="databaseResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>5. Force Reload Passes</h2>
+    <button onclick="forceReload()">Force Reload</button>
+    <div id="reloadResult"></div>
+  </div>
+
+  <script>
+    function checkEmail() {
+      const email = localStorage.getItem('userEmail');
+      const result = document.getElementById('emailResult');
+      
+      if (email) {
+        result.innerHTML = `<p class="success">✅ Email found: <strong>${email}</strong></p>`;
+      } else {
+        result.innerHTML = `<p class="error">❌ No email in localStorage!</p>
+          <p>Please login again or set email manually:</p>
+          <input type="text" id="emailInput" placeholder="your@email.com" style="padding: 5px; width: 300px;">
+          <button onclick="setEmail()">Set Email</button>`;
+      }
+    }
+
+    function setEmail() {
+      const email = document.getElementById('emailInput').value;
+      if (email) {
+        localStorage.setItem('userEmail', email);
+        checkEmail();
+      }
+    }
+
+    function fetchPasses() {
+      const email = localStorage.getItem('userEmail');
+      const result = document.getElementById('passesResult');
+      
+      if (!email) {
+        result.innerHTML = '<p class="error">❌ No email found. Check email first!</p>';
+        return;
+      }
+
+      result.innerHTML = '<p class="info">⏳ Fetching passes...</p>';
+
+      fetch(`/get-user-passes/${encodeURIComponent(email)}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log('API Response:', data);
+          
+          if (data.success) {
+            if (data.passes && data.passes.length > 0) {
+              result.innerHTML = `
+                <p class="success">✅ Found ${data.passes.length} pass(es)!</p>
+                <pre>${JSON.stringify(data.passes, null, 2)}</pre>
+              `;
+            } else {
+              result.innerHTML = `
+                <p class="error">❌ No passes found in database for ${email}</p>
+                <p>Possible reasons:</p>
+                <ul>
+                  <li>Payment not completed</li>
+                  <li>Pass not saved to database</li>
+                  <li>Wrong email address</li>
+                </ul>
+              `;
+            }
+          } else {
+            result.innerHTML = `<p class="error">❌ API Error: ${data.error || 'Unknown error'}</p>`;
+          }
+        })
+        .catch(error => {
+          console.error('Fetch error:', error);
+          result.innerHTML = `<p class="error">❌ Network Error: ${error.message}</p>`;
+        });
+    }
+
+    function checkLocalStorage() {
+      const result = document.getElementById('localStorageResult');
+      const passes = localStorage.getItem('userPasses');
+      
+      if (passes) {
+        try {
+          const parsedPasses = JSON.parse(passes);
+          result.innerHTML = `
+            <p class="success">✅ Found ${parsedPasses.length} pass(es) in localStorage</p>
+            <pre>${JSON.stringify(parsedPasses, null, 2)}</pre>
+            <button onclick="clearLocalStorage()">Clear localStorage</button>
+          `;
+        } catch (e) {
+          result.innerHTML = `<p class="error">❌ Invalid data in localStorage</p>`;
+        }
+      } else {
+        result.innerHTML = `<p class="info">ℹ️ No passes in localStorage (will fetch from backend)</p>`;
+      }
+    }
+
+    function clearLocalStorage() {
+      localStorage.removeItem('userPasses');
+      alert('localStorage cleared! Refresh the page to reload from backend.');
+      checkLocalStorage();
+    }
+
+    function testDatabase() {
+      const result = document.getElementById('databaseResult');
+      result.innerHTML = '<p class="info">⏳ Testing database connection...</p>';
+
+      fetch('/api/test-db')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            result.innerHTML = `<p class="success">✅ Database connected!</p>`;
+          } else {
+            result.innerHTML = `<p class="error">❌ Database error: ${data.error}</p>`;
+          }
+        })
+        .catch(error => {
+          result.innerHTML = `<p class="error">❌ Cannot reach server</p>`;
+        });
+    }
+
+    function forceReload() {
+      const result = document.getElementById('reloadResult');
+      result.innerHTML = '<p class="info">⏳ Clearing cache and reloading...</p>';
+      
+      localStorage.removeItem('userPasses');
+      
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
+    }
+
+    // Auto-run checks on load
+    window.onload = function() {
+      checkEmail();
+      checkLocalStorage();
+    };
+  </script>
+</body>
+</html>

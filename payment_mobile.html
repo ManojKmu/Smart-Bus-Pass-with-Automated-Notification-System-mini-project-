@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mobile Payment - Smart Bus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      padding: 10px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .content {
+      padding: 20px;
+    }
+    
+    .amount-display {
+      text-align: center;
+      background: #f8fff8;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 2px solid #4CAF50;
+    }
+    
+    .amount-value {
+      font-size: 2em;
+      font-weight: bold;
+      color: #4CAF50;
+      margin: 10px 0;
+    }
+    
+    .upi-app {
+      background: white;
+      border: 2px solid #4CAF50;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .upi-app:hover {
+      background: #f8fff8;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .upi-icon {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+    
+    .upi-name {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .upi-instruction {
+      font-size: 0.9em;
+      color: #666;
+    }
+    
+    .payment-info {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      font-size: 0.9em;
+    }
+    
+    .back-btn {
+      background: #666;
+      color: white;
+      padding: 15px;
+      border: none;
+      border-radius: 25px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>📱 Mobile Payment</h2>
+      <p>Choose your UPI app to pay</p>
+    </div>
+    
+    <div class="content">
+      <!-- Amount Display -->
+      <div class="amount-display">
+        <div>Amount to Pay</div>
+        <div class="amount-value">₹<span id="payAmount">50</span></div>
+        <div>To: 8340927497@ibl</div>
+      </div>
+
+      <!-- Payment Info -->
+      <div class="payment-info">
+        <strong>Payment Details:</strong><br>
+        Merchant: Lingam Manoj Kumar<br>
+        Service: <span id="passType">Smart Bus Pass</span><br>
+        UPI ID: 8340927497@ibl
+      </div>
+
+      <!-- UPI Apps -->
+      <div class="upi-app" onclick="openMobileUPI('phonepe')">
+        <div class="upi-icon" style="color: #5f259f;">
+          <i class="fas fa-mobile-alt"></i>
+        </div>
+        <div class="upi-name">PhonePe</div>
+        <div class="upi-instruction">Tap to open PhonePe app</div>
+      </div>
+
+      <div class="upi-app" onclick="openMobileUPI('gpay')">
+        <div class="upi-icon" style="color: #4285f4;">
+          <i class="fab fa-google-pay"></i>
+        </div>
+        <div class="upi-name">Google Pay</div>
+        <div class="upi-instruction">Tap to open Google Pay app</div>
+      </div>
+
+      <div class="upi-app" onclick="openMobileUPI('paytm')">
+        <div class="upi-icon" style="color: #00baf2;">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div class="upi-name">Paytm</div>
+        <div class="upi-instruction">Tap to open Paytm app</div>
+      </div>
+
+      <div class="upi-app" onclick="openMobileUPI('bhim')">
+        <div class="upi-icon" style="color: #ff6b35;">
+          <i class="fas fa-university"></i>
+        </div>
+        <div class="upi-name">BHIM UPI</div>
+        <div class="upi-instruction">Tap to open BHIM app</div>
+      </div>
+
+      <a href="/route" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Back to Route Selection
+      </a>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadPaymentData();
+    });
+
+    function loadPaymentData() {
+      let selectedPass = localStorage.getItem('selectedPass') || 'Daily Pass';
+      let selectedPrice = localStorage.getItem('selectedPrice') || '₹50';
+      let calculatedFare = localStorage.getItem('calculatedFare');
+
+      if (calculatedFare && calculatedFare !== 'null') {
+        selectedPrice = `₹${calculatedFare}`;
+      }
+
+      const numericPrice = parseInt(selectedPrice.replace('₹', '').replace(',', '')) || 50;
+
+      document.getElementById('passType').textContent = selectedPass;
+      document.getElementById('payAmount').textContent = numericPrice;
+    }
+
+    function openMobileUPI(app) {
+      const amount = document.getElementById('payAmount').textContent;
+      const passType = document.getElementById('passType').textContent;
+      
+      console.log(`📱 Opening ${app} on mobile device`);
+      
+      // Generate UPI URL
+      const upiUrl = generateMobileUPIURL(app, amount, passType);
+      console.log('🔗 Mobile UPI URL:', upiUrl);
+      
+      // Show confirmation
+      const confirmed = confirm(`Open ${app.toUpperCase()} to pay ₹${amount}?\n\nThis will open your ${app.toUpperCase()} app with payment details pre-filled.\n\nMerchant: Lingam Manoj Kumar\nUPI ID: 8340927497@ibl`);
+      
+      if (confirmed) {
+        // Try multiple methods to open UPI app
+        tryMobileUPIOpen(upiUrl, app, amount);
+      }
+    }
+
+    function generateMobileUPIURL(app, amount, description) {
+      const upiId = '8340927497@ibl';
+      const merchantName = 'Lingam Manoj Kumar';
+      const encodedMerchant = encodeURIComponent(merchantName);
+      const encodedDescription = encodeURIComponent(`Smart Bus ${description}`);
+      const transactionRef = `MB${Date.now()}`;
+
+      const upiUrls = {
+        'phonepe': `phonepe://pay?pa=${upiId}&pn=${encodedMerchant}&am=${amount}&cu=INR&tn=${encodedDescription}&tr=${transactionRef}`,
+        'gpay': `tez://upi/pay?pa=${upiId}&pn=${encodedMerchant}&am=${amount}&cu=INR&tn=${encodedDescription}&tr=${transactionRef}`,
+        'paytm': `paytmmp://pay?pa=${upiId}&pn=${encodedMerchant}&am=${amount}&cu=INR&tn=${encodedDescription}&tr=${transactionRef}`,
+        'bhim': `bhim://pay?pa=${upiId}&pn=${encodedMerchant}&am=${amount}&cu=INR&tn=${encodedDescription}&tr=${transactionRef}`
+      };
+
+      return upiUrls[app] || `upi://pay?pa=${upiId}&pn=${encodedMerchant}&am=${amount}&cu=INR&tn=${encodedDescription}&tr=${transactionRef}`;
+    }
+
+    function tryMobileUPIOpen(upiUrl, appName, amount) {
+      console.log(`🚀 Attempting to open ${appName} on mobile...`);
+      
+      // Method 1: Direct window location (most reliable on mobile)
+      try {
+        window.location.href = upiUrl;
+        console.log('✅ Direct navigation attempted');
+        
+        // Show success message after app opens
+        setTimeout(() => {
+          showMobilePaymentInstructions(appName, amount);
+        }, 2000);
+        
+      } catch (error) {
+        console.log('❌ Direct navigation failed:', error);
+        
+        // Method 2: Create invisible link and click
+        try {
+          const link = document.createElement('a');
+          link.href = upiUrl;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          console.log('✅ Link click attempted');
+          
+          setTimeout(() => {
+            showMobilePaymentInstructions(appName, amount);
+          }, 2000);
+          
+        } catch (linkError) {
+          console.log('❌ Link click failed:', linkError);
+          showManualPaymentInfo(appName, amount);
+        }
+      }
+    }
+
+    function showMobilePaymentInstructions(appName, amount) {
+      const instructions = `
+        📱 ${appName.toUpperCase()} should now be opening...
+        
+        If the app opened:
+        1. Complete the payment of ₹${amount}
+        2. Return to this page
+        3. Your pass will be activated
+        
+        If the app didn't open:
+        1. Open ${appName.toUpperCase()} manually
+        2. Pay to: 8340927497@ibl
+        3. Amount: ₹${amount}
+        4. Merchant: Lingam Manoj Kumar
+      `;
+      
+      alert(instructions);
+    }
+
+    function showManualPaymentInfo(appName, amount) {
+      const manualInfo = `
+        📱 Manual Payment Required
+        
+        Please open ${appName.toUpperCase()} manually and pay:
+        
+        UPI ID: 8340927497@ibl
+        Amount: ₹${amount}
+        Merchant: Lingam Manoj Kumar
+        Service: Smart Bus Pass
+        
+        After payment, contact support for pass activation.
+      `;
+      
+      alert(manualInfo);
+    }
+  </script>
+</body>
+</html>

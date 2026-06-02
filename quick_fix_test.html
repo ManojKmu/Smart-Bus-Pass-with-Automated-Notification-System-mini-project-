@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-box { margin: 20px 0; padding: 20px; border: 2px solid #ddd; border-radius: 8px; }
+        .success { border-color: #4CAF50; background: #f8fff8; }
+        .error { border-color: #f44336; background: #fff8f8; }
+        .warning { border-color: #ff9800; background: #fff8f0; }
+        button { padding: 12px 20px; margin: 10px 5px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #45a049; }
+        .status { font-weight: bold; margin: 10px 0; }
+        pre { background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .nav-links { text-align: center; margin: 30px 0; }
+        .nav-links a { display: inline-block; margin: 0 15px; padding: 10px 20px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Quick Fix Test - Smart Bus System</h1>
+        <p>This page tests the main issues you reported:</p>
+        
+        <div class="test-box" id="passTest">
+            <h2>1. Pass Selection Test</h2>
+            <p>Testing if pass selection and localStorage work correctly.</p>
+            <button onclick="testPassSelection()">Test Pass Selection</button>
+            <button onclick="clearPassData()">Clear Pass Data</button>
+            <div class="status" id="passStatus">Click "Test Pass Selection" to start</div>
+        </div>
+        
+        <div class="test-box" id="distanceTest">
+            <h2>2. Distance API Test</h2>
+            <p>Testing the real-time distance calculation API.</p>
+            <button onclick="testDistanceAPI()">Test Distance API</button>
+            <div class="status" id="distanceStatus">Click "Test Distance API" to start</div>
+        </div>
+        
+        <div class="test-box" id="storageTest">
+            <h2>3. localStorage Inspection</h2>
+            <p>View all data stored in browser localStorage.</p>
+            <button onclick="showStorage()">Show localStorage</button>
+            <button onclick="clearAllStorage()">Clear All Storage</button>
+            <div class="status" id="storageStatus">Click "Show localStorage" to view data</div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/dashboard">Go to Dashboard</a>
+            <a href="/route">Go to Route Page</a>
+            <a href="/">Go to Home</a>
+        </div>
+    </div>
+
+    <script>
+        function testPassSelection() {
+            console.log('🧪 Testing pass selection...');
+            
+            // Simulate selecting a Daily Pass
+            localStorage.setItem('selectedPass', 'Daily Pass');
+            localStorage.setItem('selectedPrice', '₹25');
+            localStorage.setItem('selectedDuration', '1 day');
+            
+            // Also set user data
+            localStorage.setItem('userName', 'Test User');
+            localStorage.setItem('userEmail', 'test@smartbus.com');
+            
+            // Verify storage
+            const pass = localStorage.getItem('selectedPass');
+            const price = localStorage.getItem('selectedPrice');
+            
+            const testBox = document.getElementById('passTest');
+            const status = document.getElementById('passStatus');
+            
+            if (pass && price) {
+                testBox.className = 'test-box success';
+                status.innerHTML = `
+                    <div style="color: green;">✅ PASS SELECTION WORKING!</div>
+                    <div>Selected Pass: ${pass}</div>
+                    <div>Price: ${price}</div>
+                    <div style="margin-top: 10px; font-size: 12px;">Now go to Route page to see if it displays correctly.</div>
+                `;
+            } else {
+                testBox.className = 'test-box error';
+                status.innerHTML = '<div style="color: red;">❌ Pass selection failed!</div>';
+            }
+        }
+        
+        function clearPassData() {
+            localStorage.removeItem('selectedPass');
+            localStorage.removeItem('selectedPrice');
+            localStorage.removeItem('selectedDuration');
+            
+            const testBox = document.getElementById('passTest');
+            const status = document.getElementById('passStatus');
+            
+            testBox.className = 'test-box warning';
+            status.innerHTML = '<div style="color: orange;">⚠️ Pass data cleared</div>';
+        }
+        
+        function testDistanceAPI() {
+            const testBox = document.getElementById('distanceTest');
+            const status = document.getElementById('distanceStatus');
+            
+            testBox.className = 'test-box warning';
+            status.innerHTML = '<div style="color: blue;">🔄 Testing distance API...</div>';
+            
+            fetch('/calculate-distance-realtime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    origin: 'Santosh Nagar',
+                    destination: 'Colony Kumarwadi'
+                })
+            })
+            .then(response => {
+                console.log('API Response:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Data:', data);
+                
+                if (data.success) {
+                    testBox.className = 'test-box success';
+                    status.innerHTML = `
+                        <div style="color: green;">✅ DISTANCE API WORKING!</div>
+                        <div>Distance: ${data.distance_km} km</div>
+                        <div>Fare: ₹${data.fare}</div>
+                        <div>Travel Time: ${data.travel_time_minutes} minutes</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    testBox.className = 'test-box error';
+                    status.innerHTML = `
+                        <div style="color: red;">❌ API returned error</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('API Error:', error);
+                testBox.className = 'test-box error';
+                status.innerHTML = `
+                    <div style="color: red;">❌ DISTANCE API FAILED!</div>
+                    <div>Error: ${error.message}</div>
+                    <div style="font-size: 12px; margin-top: 10px;">Check if Flask server is running and the API route exists.</div>
+                `;
+            });
+        }
+        
+        function showStorage() {
+            const testBox = document.getElementById('storageTest');
+            const status = document.getElementById('storageStatus');
+            
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                data[key] = localStorage.getItem(key);
+            }
+            
+            if (Object.keys(data).length > 0) {
+                testBox.className = 'test-box success';
+                status.innerHTML = `
+                    <div style="color: green;">✅ localStorage contains data:</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } else {
+                testBox.className = 'test-box warning';
+                status.innerHTML = '<div style="color: orange;">⚠️ localStorage is empty</div>';
+            }
+        }
+        
+        function clearAllStorage() {
+            localStorage.clear();
+            const testBox = document.getElementById('storageTest');
+            const status = document.getElementById('storageStatus');
+            
+            testBox.className = 'test-box warning';
+            status.innerHTML = '<div style="color: orange;">⚠️ All localStorage data cleared</div>';
+        }
+        
+        // Auto-run storage check on page load
+        window.onload = function() {
+            showStorage();
+        };
+    </script>
+</body>
+</html>

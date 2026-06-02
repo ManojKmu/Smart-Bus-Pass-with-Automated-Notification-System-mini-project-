@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route - Smart Bus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .pass-display {
+            background: #e8f5e8;
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .map-container {
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .distance-display {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        .distance-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            text-align: center;
+        }
+        .distance-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .distance-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        .distance-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .api-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .map-instructions {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            color: #0c5460;
+        }
+        .map-instructions i {
+            color: #17a2b8;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Choose Your Route</h1>
+            <p>Select pickup and drop-off points for your journey</p>
+            <a href="/dashboard" style="color: white; text-decoration: none;">← Back to Dashboard</a>
+        </div>
+
+        <div class="api-notice">
+            <i class="fas fa-info-circle"></i>
+            <strong>Google Maps Integration</strong><br>
+            <small>Enhanced route visualization with real-time traffic data</small>
+        </div>
+
+        <div class="pass-display">
+            <h3>Selected Pass</h3>
+            <p><strong>Pass Type:</strong> <span id="displayPassName">Loading...</span></p>
+            <p><strong>Base Amount:</strong> <span id="displayPassPrice">Loading...</span></p>
+            <a href="/dashboard" style="color: #4CAF50;">Change Pass</a>
+        </div>
+
+        <div class="form-group">
+            <label for="pickup">📍 Pickup Point</label>
+            <input type="text" id="pickup" placeholder="Enter pickup location (e.g., Santosh Nagar, Hyderabad)">
+        </div>
+
+        <div class="form-group">
+            <label for="dropoff">🎯 Drop-off Point</label>
+            <input type="text" id="dropoff" placeholder="Enter drop-off location (e.g., Colony Kumarwadi, Hyderabad)">
+        </div>
+
+        <!-- Map Instructions -->
+        <div class="map-instructions">
+            <i class="fas fa-info-circle"></i>
+            <strong>Map Instructions:</strong> The map below will automatically show your route when you enter both pickup and drop-off locations. You can also click on the map to select locations directly.
+        </div>
+
+        <!-- Google Maps Container - Always Visible -->
+        <div id="map" class="map-container"></div>
+
+        <!-- Distance Display Section -->
+        <div id="distanceDisplay" class="distance-display">
+            <h3 style="text-align: center; margin-bottom: 20px;">Route Information</h3>
+            <div class="distance-info">
+                <div class="distance-item">
+                    <div class="distance-value" id="distanceValue">0 km</div>
+                    <div class="distance-label">Distance</div>
+                </div>
+                <div class="distance-item">
+                    <div class="distance-value" id="fareValue">₹0</div>
+                    <div class="distance-label">Calculated Fare</div>
+                </div>
+                <div class="distance-item">
+                    <div class="distance-value" id="travelTimeValue">0 min</div>
+                    <div class="distance-label">Travel Time</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn" id="proceedBtn" onclick="proceedToPayment()">
+            Please enter pickup and drop-off points
+        </button>
+    </div>
+
+    <!-- Google Maps API - Replace YOUR_API_KEY with actual key -->
+    <script>
+        // Google Maps configuration
+        const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+        
+        let map;
+        let directionsService;
+        let directionsRenderer;
+        let geocoder;
+
+        // Load user data and pass info
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSelectedPassInfo();
+            setupEventListeners();
+            initGoogleMaps();
+        });
+
+        function loadSelectedPassInfo() {
+            console.log('🎫 Loading selected pass information...');
+            
+            // Try multiple storage methods for reliability
+            let selectedPass = localStorage.getItem('selectedPass') || sessionStorage.getItem('selectedPass');
+            let selectedPrice = localStorage.getItem('selectedPrice') || sessionStorage.getItem('selectedPrice');
+            
+            console.log('🎫 Storage check:', {
+                localStorage: {
+                    pass: localStorage.getItem('selectedPass'),
+                    price: localStorage.getItem('selectedPrice')
+                },
+                sessionStorage: {
+                    pass: sessionStorage.getItem('selectedPass'),
+                    price: sessionStorage.getItem('selectedPrice')
+                }
+            });
+            
+            // Try URL parameters if storage is empty
+            if (!selectedPass || !selectedPrice || selectedPass === 'null' || selectedPrice === 'null') {
+                console.log('🎫 Trying URL parameters...');
+                const urlParams = new URLSearchParams(window.location.search);
+                selectedPass = urlParams.get('pass');
+                selectedPrice = urlParams.get('price');
+                
+                if (selectedPass && selectedPrice) {
+                    selectedPass = decodeURIComponent(selectedPass);
+                    selectedPrice = decodeURIComponent(selectedPrice);
+                    
+                    // Store in both storages
+                    localStorage.setItem('selectedPass', selectedPass);
+                    localStorage.setItem('selectedPrice', selectedPrice);
+                    sessionStorage.setItem('selectedPass', selectedPass);
+                    sessionStorage.setItem('selectedPrice', selectedPrice);
+                    
+                    console.log('🎫 Pass data loaded from URL and stored');
+                }
+            }
+            
+            // Update display
+            const displayPassName = document.getElementById('displayPassName');
+            const displayPassPrice = document.getElementById('displayPassPrice');
+            
+            if (selectedPass && selectedPrice && selectedPass !== 'null' && selectedPrice !== 'null') {
+                displayPassName.textContent = selectedPass;
+                displayPassPrice.textContent = selectedPrice;
+                console.log('✅ Pass information displayed:', selectedPass, selectedPrice);
+                
+                // Store globally for distance calculation
+                window.selectedPassType = selectedPass;
+                window.selectedPassPrice = selectedPrice;
+            } else {
+                displayPassName.textContent = 'No Pass Selected';
+                displayPassPrice.textContent = 'Please select a pass from dashboard';
+                console.log('❌ No pass information found');
+                
+                // Show warning message
+                setTimeout(() => {
+                    if (!selectedPass || selectedPass === 'null') {
+                        alert('No pass selected. Please go back to dashboard and select a pass first.');
+                    }
+                }, 2000);
+            }
+        }
+
+        function initGoogleMaps() {
+            const mapContainer = document.getElementById('map');
+            
+            // Check if API key is set
+            if (GOOGLE_MAPS_API_KEY === 'YOUR_API_KEY_HERE') {
+                mapContainer.innerHTML = `
+                    <div style="height: 400px; display: flex; align-items: center; justify-content: center; color: #666; background: #fff3cd; border: 2px dashed #ffeaa7;">
+                        <div style="text-align: center; padding: 20px;">
+                            <i class="fas fa-key" style="font-size: 3em; margin-bottom: 10px; color: #856404;"></i><br>
+                            <strong>Google Maps API Key Required</strong><br>
+                            <small>Please add your Google Maps API key to enable map features</small><br>
+                            <small style="margin-top: 10px; display: block;">You can still calculate distances without the map</small>
+                        </div>
+                    </div>
+                `;
+                console.log('⚠️ Google Maps API key not configured');
+                return;
+            }
+            
+            // Load Google Maps API automatically
+            if (window.google && window.google.maps) {
+                console.log('✅ Google Maps already loaded');
+                setupGoogleMap();
+                return;
+            }
+            
+            console.log('🔄 Loading Google Maps API automatically...');
+            mapContainer.innerHTML = `
+                <div style="height: 400px; display: flex; align-items: center; justify-content: center; color: #666; background: #f8f9fa;">
+                    <div style="text-align: center;">
+                        <div class="loading" style="margin-bottom: 10px;"></div><br>
+                        <strong>Loading Google Maps...</strong><br>
+                        <small>Map will appear here automatically</small>
+                    </div>
+                </div>
+            `;
+            
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=setupGoogleMap`;
+            script.async = true;
+            script.defer = true;
+            
+            script.onerror = function() {
+                console.error('❌ Failed to load Google Maps API');
+                mapContainer.innerHTML = `
+                    <div style="height: 400px; display: flex; align-items: center; justify-content: center; color: red; background: #f8d7da; border: 2px dashed #dc3545;">
+                        <div style="text-align: center; padding: 20px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3em; margin-bottom: 10px;"></i><br>
+                            <strong>Google Maps Failed to Load</strong><br>
+                            <small>Please check your API key and internet connection</small><br>
+                            <small style="margin-top: 10px; display: block;">Distance calculation will still work</small>
+                        </div>
+                    </div>
+                `;
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        function setupGoogleMap() {
+            try {
+                console.log('🗺️ Setting up Google Maps...');
+                
+                const mapContainer = document.getElementById('map');
+                
+                // Initialize map centered on Hyderabad
+                map = new google.maps.Map(mapContainer, {
+                    zoom: 11,
+                    center: { lat: 17.3850, lng: 78.4867 }, // Hyderabad
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    styles: [
+                        {
+                            featureType: "poi",
+                            elementType: "labels",
+                            stylers: [{ visibility: "on" }]
+                        }
+                    ],
+                    clickableIcons: true,
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    mapTypeControl: true,
+                    scaleControl: true,
+                    streetViewControl: true,
+                    rotateControl: true,
+                    fullscreenControl: true
+                });
+
+                // Initialize services
+                directionsService = new google.maps.DirectionsService();
+                directionsRenderer = new google.maps.DirectionsRenderer({
+                    draggable: false,
+                    panel: null,
+                    polylineOptions: {
+                        strokeColor: '#4CAF50',
+                        strokeWeight: 4,
+                        strokeOpacity: 0.8
+                    },
+                    markerOptions: {
+                        draggable: false
+                    }
+                });
+                directionsRenderer.setMap(map);
+                
+                geocoder = new google.maps.Geocoder();
+
+                // Add click listener for map selection
+                map.addListener('click', function(event) {
+                    handleMapClick(event.latLng);
+                });
+
+                // Add info window with instructions
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="text-align: center; padding: 10px;">
+                            <h4 style="margin: 0 0 10px 0; color: #4CAF50;">🗺️ Smart Bus Route Planner</h4>
+                            <p style="margin: 5px 0;">Enter locations above or click on the map to select points</p>
+                            <small style="color: #666;">Map is ready for route planning!</small>
+                        </div>
+                    `,
+                    position: { lat: 17.3850, lng: 78.4867 }
+                });
+                infoWindow.open(map);
+
+                // Auto-close info window after 5 seconds
+                setTimeout(() => {
+                    infoWindow.close();
+                }, 5000);
+
+                console.log('✅ Google Maps initialized successfully with click functionality');
+                
+            } catch (error) {
+                console.error('❌ Google Maps setup failed:', error);
+                document.getElementById('map').innerHTML = `
+                    <div style="height: 400px; display: flex; align-items: center; justify-content: center; color: red;">
+                        <div style="text-align: center;">
+                            <h3>❌ Map Setup Failed</h3>
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        let clickMode = 'pickup'; // 'pickup' or 'dropoff'
+        let pickupMarker = null;
+        let dropoffMarker = null;
+
+        function handleMapClick(latLng) {
+            console.log('🖱️ Map clicked:', latLng.lat(), latLng.lng());
+            
+            // Reverse geocode to get address
+            geocoder.geocode({ location: latLng }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    console.log('📍 Geocoded address:', address);
+                    
+                    // Determine which field to fill based on current state
+                    const pickupField = document.getElementById('pickup');
+                    const dropoffField = document.getElementById('dropoff');
+                    
+                    if (!pickupField.value.trim()) {
+                        // Fill pickup if empty
+                        pickupField.value = address;
+                        addMarker(latLng, 'pickup', address);
+                        console.log('📍 Set as pickup location');
+                    } else if (!dropoffField.value.trim()) {
+                        // Fill dropoff if pickup is filled but dropoff is empty
+                        dropoffField.value = address;
+                        addMarker(latLng, 'dropoff', address);
+                        console.log('🎯 Set as dropoff location');
+                        
+                        // Trigger route calculation
+                        setTimeout(() => {
+                            checkFormCompletion();
+                        }, 500);
+                    } else {
+                        // Both fields filled, ask user which to replace
+                        const choice = confirm('Both locations are set. Click OK to replace pickup location, Cancel to replace dropoff location.');
+                        if (choice) {
+                            pickupField.value = address;
+                            addMarker(latLng, 'pickup', address);
+                            console.log('📍 Replaced pickup location');
+                        } else {
+                            dropoffField.value = address;
+                            addMarker(latLng, 'dropoff', address);
+                            console.log('🎯 Replaced dropoff location');
+                        }
+                        
+                        // Trigger route calculation
+                        setTimeout(() => {
+                            checkFormCompletion();
+                        }, 500);
+                    }
+                } else {
+                    console.error('❌ Geocoding failed:', status);
+                    alert('Could not determine address for this location. Please try clicking elsewhere or enter the location manually.');
+                }
+            });
+        }
+
+        function addMarker(latLng, type, address) {
+            // Remove existing marker of the same type
+            if (type === 'pickup' && pickupMarker) {
+                pickupMarker.setMap(null);
+            } else if (type === 'dropoff' && dropoffMarker) {
+                dropoffMarker.setMap(null);
+            }
+            
+            // Create new marker
+            const marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                title: type === 'pickup' ? '📍 Pickup Location' : '🎯 Dropoff Location',
+                icon: {
+                    url: type === 'pickup' ? 
+                        'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                            <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="12" fill="#4CAF50" stroke="white" stroke-width="2"/>
+                                <text x="16" y="20" text-anchor="middle" fill="white" font-size="16">📍</text>
+                            </svg>
+                        `) :
+                        'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                            <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="12" fill="#f44336" stroke="white" stroke-width="2"/>
+                                <text x="16" y="20" text-anchor="middle" fill="white" font-size="16">🎯</text>
+                            </svg>
+                        `),
+                    scaledSize: new google.maps.Size(32, 32)
+                }
+            });
+            
+            // Add info window
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="text-align: center; min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; color: ${type === 'pickup' ? '#4CAF50' : '#f44336'};">
+                            ${type === 'pickup' ? '📍 Pickup Location' : '🎯 Dropoff Location'}
+                        </h4>
+                        <p style="margin: 5px 0; font-size: 14px;">${address}</p>
+                        <small style="color: #666;">Lat: ${latLng.lat().toFixed(6)}, Lng: ${latLng.lng().toFixed(6)}</small>
+                    </div>
+                `
+            });
+            
+            marker.addListener('click', () => {
+                infoWindow.open(map, marker);
+            });
+            
+            // Store marker reference
+            if (type === 'pickup') {
+                pickupMarker = marker;
+            } else {
+                dropoffMarker = marker;
+            }
+            
+            console.log(`✅ Added ${type} marker at:`, latLng.lat(), latLng.lng());
+        }
+
+        function setupEventListeners() {
+            document.getElementById('pickup').addEventListener('input', debounceLocationInput);
+            document.getElementById('dropoff').addEventListener('input', debounceLocationInput);
+            
+            document.getElementById('pickup').addEventListener('blur', function() {
+                checkFormCompletion();
+            });
+            
+            document.getElementById('dropoff').addEventListener('blur', function() {
+                checkFormCompletion();
+            });
+        }
+
+        let debounceTimer;
+        function debounceLocationInput() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                checkFormCompletion();
+            }, 500);
+        }
+
+        function checkFormCompletion() {
+            const pickup = document.getElementById('pickup').value.trim();
+            const dropoff = document.getElementById('dropoff').value.trim();
+            const proceedBtn = document.getElementById('proceedBtn');
+            
+            console.log('🔍 Form completion check:', { pickup, dropoff });
+            
+            if (pickup && dropoff && pickup.length > 2 && dropoff.length > 2) {
+                console.log('✅ Both locations entered, calculating route...');
+                
+                // Store route information
+                localStorage.setItem('selectedRoute', pickup + ' → ' + dropoff);
+                
+                // Calculate route using Google Maps if available, otherwise use backend
+                if (map && directionsService) {
+                    calculateRouteWithGoogleMaps(pickup, dropoff);
+                } else {
+                    calculateDistanceViaAPI(pickup, dropoff);
+                }
+                
+            } else {
+                console.log('❌ Incomplete form, disabling proceed button');
+                
+                // Disable proceed button
+                proceedBtn.disabled = true;
+                proceedBtn.innerHTML = 'Please enter pickup and drop-off points';
+                proceedBtn.style.background = '#ccc';
+                
+                // Hide distance display
+                document.getElementById('distanceDisplay').style.display = 'none';
+            }
+        }
+
+        function calculateRouteWithGoogleMaps(pickup, dropoff) {
+            console.log('🗺️ Calculating route with Google Maps:', pickup, '→', dropoff);
+            
+            // Show distance display with loading
+            const distanceDisplay = document.getElementById('distanceDisplay');
+            distanceDisplay.style.display = 'block';
+            
+            document.getElementById('distanceValue').innerHTML = '<div class="loading"></div>';
+            document.getElementById('fareValue').innerHTML = '<div class="loading"></div>';
+            document.getElementById('travelTimeValue').innerHTML = '<div class="loading"></div>';
+            
+            // Calculate route using Google Maps Directions API
+            const request = {
+                origin: pickup + ', India',
+                destination: dropoff + ', India',
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.METRIC,
+                avoidHighways: false,
+                avoidTolls: false
+            };
+
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    console.log('✅ Google Maps route calculated:', result);
+                    
+                    // Display route on map
+                    directionsRenderer.setDirections(result);
+                    
+                    // Extract route information
+                    const route = result.routes[0];
+                    const leg = route.legs[0];
+                    
+                    const distance = leg.distance.value / 1000; // Convert to km
+                    const duration = Math.round(leg.duration.value / 60); // Convert to minutes
+                    
+                    // Calculate fare using our backend
+                    calculateFareWithGoogleData(pickup, dropoff, distance, duration);
+                    
+                } else {
+                    console.error('❌ Google Maps route calculation failed:', status);
+                    console.log('🔄 Falling back to backend API...');
+                    
+                    // Fallback to backend API
+                    calculateDistanceViaAPI(pickup, dropoff);
+                }
+            });
+        }
+
+        function calculateFareWithGoogleData(pickup, dropoff, distance, duration) {
+            console.log('💰 Calculating fare with Google Maps data...');
+            
+            // Get selected pass info
+            const selectedPass = window.selectedPassType || localStorage.getItem('selectedPass') || sessionStorage.getItem('selectedPass') || 'Regular Pass';
+            const selectedPrice = window.selectedPassPrice || localStorage.getItem('selectedPrice') || sessionStorage.getItem('selectedPrice') || '₹50';
+            
+            // Call backend API with Google Maps data
+            fetch('/calculate-distance-realtime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    origin: pickup.trim(),
+                    destination: dropoff.trim(),
+                    pass_type: selectedPass,
+                    base_price: selectedPrice,
+                    google_distance: distance,
+                    google_duration: duration
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('📡 Backend API Response:', data);
+                
+                let fare;
+                if (data.success) {
+                    fare = data.fare;
+                } else {
+                    // Calculate fare locally if backend fails
+                    fare = calculateFareByPassType(distance, selectedPass);
+                }
+                
+                // Store the results
+                localStorage.setItem('routeDistance', distance.toFixed(1));
+                localStorage.setItem('calculatedFare', fare.toString());
+                localStorage.setItem('travelTime', duration.toString());
+                localStorage.setItem('routeOrigin', pickup);
+                localStorage.setItem('routeDestination', dropoff);
+                localStorage.setItem('calculationMethod', 'Google Maps + Backend API');
+                
+                // Update display
+                document.getElementById('distanceValue').textContent = `${distance.toFixed(1)} km`;
+                document.getElementById('fareValue').textContent = `₹${fare}`;
+                document.getElementById('travelTimeValue').textContent = `${duration} min`;
+                
+                // Update proceed button
+                const proceedBtn = document.getElementById('proceedBtn');
+                proceedBtn.disabled = false;
+                proceedBtn.innerHTML = `<i class="fas fa-credit-card"></i> Proceed to Payment (₹${fare})`;
+                proceedBtn.style.background = '#4CAF50';
+                
+                console.log('✅ Google Maps route calculation completed');
+                console.log(`   Distance: ${distance.toFixed(1)} km (Google Maps)`);
+                console.log(`   Fare: ₹${fare}`);
+                console.log(`   Travel Time: ${duration} min (Google Maps)`);
+                
+            })
+            .catch(error => {
+                console.error('❌ Backend API failed:', error);
+                
+                // Calculate fare locally
+                const fare = calculateFareByPassType(distance, selectedPass);
+                
+                // Store results
+                localStorage.setItem('routeDistance', distance.toFixed(1));
+                localStorage.setItem('calculatedFare', fare.toString());
+                localStorage.setItem('travelTime', duration.toString());
+                localStorage.setItem('routeOrigin', pickup);
+                localStorage.setItem('routeDestination', dropoff);
+                localStorage.setItem('calculationMethod', 'Google Maps Only');
+                
+                // Update display
+                document.getElementById('distanceValue').textContent = `${distance.toFixed(1)} km`;
+                document.getElementById('fareValue').textContent = `₹${fare}`;
+                document.getElementById('travelTimeValue').textContent = `${duration} min`;
+                
+                // Update proceed button
+                const proceedBtn = document.getElementById('proceedBtn');
+                proceedBtn.disabled = false;
+                proceedBtn.innerHTML = `<i class="fas fa-credit-card"></i> Proceed to Payment (₹${fare})`;
+                proceedBtn.style.background = '#4CAF50';
+                
+                console.log('✅ Google Maps calculation completed (local fare)');
+            });
+        }
+
+        function calculateDistanceViaAPI(pickup, dropoff) {
+            console.log('🔄 Calculating distance via backend API:', pickup, '→', dropoff);
+            
+            // Show distance display with loading
+            const distanceDisplay = document.getElementById('distanceDisplay');
+            distanceDisplay.style.display = 'block';
+            
+            document.getElementById('distanceValue').innerHTML = '<div class="loading"></div>';
+            document.getElementById('fareValue').innerHTML = '<div class="loading"></div>';
+            document.getElementById('travelTimeValue').innerHTML = '<div class="loading"></div>';
+            
+            // Get selected pass info for fare calculation
+            const selectedPass = window.selectedPassType || localStorage.getItem('selectedPass') || sessionStorage.getItem('selectedPass') || 'Regular Pass';
+            const selectedPrice = window.selectedPassPrice || localStorage.getItem('selectedPrice') || sessionStorage.getItem('selectedPrice') || '₹50';
+            
+            console.log('🎫 Using pass for calculation:', selectedPass, selectedPrice);
+            
+            // Prepare API request data
+            const requestData = {
+                origin: pickup.trim(),
+                destination: dropoff.trim(),
+                pass_type: selectedPass,
+                base_price: selectedPrice
+            };
+            
+            console.log('📡 API Request data:', requestData);
+            
+            // Call backend API
+            fetch('/calculate-distance-realtime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                console.log('📡 API Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('📡 API Response data:', data);
+                
+                if (data.success) {
+                    const distance = data.distance_km;
+                    const fare = data.fare;
+                    const travelTime = data.travel_time_minutes;
+                    
+                    // Store the results
+                    localStorage.setItem('routeDistance', distance.toString());
+                    localStorage.setItem('calculatedFare', fare.toString());
+                    localStorage.setItem('travelTime', travelTime.toString());
+                    localStorage.setItem('routeOrigin', pickup);
+                    localStorage.setItem('routeDestination', dropoff);
+                    localStorage.setItem('calculationMethod', data.calculation_method || 'Backend API');
+                    
+                    // Update display
+                    document.getElementById('distanceValue').textContent = `${distance} km`;
+                    document.getElementById('fareValue').textContent = `₹${fare}`;
+                    document.getElementById('travelTimeValue').textContent = `${travelTime} min`;
+                    
+                    // Update proceed button
+                    const proceedBtn = document.getElementById('proceedBtn');
+                    proceedBtn.disabled = false;
+                    proceedBtn.innerHTML = `<i class="fas fa-credit-card"></i> Proceed to Payment (₹${fare})`;
+                    proceedBtn.style.background = '#4CAF50';
+                    
+                    console.log('✅ Backend distance calculation completed');
+                    console.log(`   Distance: ${distance} km`);
+                    console.log(`   Fare: ₹${fare}`);
+                    console.log(`   Pass Type: ${selectedPass}`);
+                    console.log(`   Method: ${data.calculation_method}`);
+                } else {
+                    throw new Error(data.error || 'Distance calculation failed');
+                }
+            })
+            .catch(error => {
+                console.error('❌ API failed, using fallback calculation:', error);
+                
+                // Use fallback calculation
+                const distance = estimateDistanceSimple(pickup, dropoff);
+                const fare = calculateFareByPassType(distance, selectedPass);
+                const travelTime = Math.round(distance * 2.5); // Estimate: 2.5 min per km
+                
+                // Store fallback results
+                localStorage.setItem('routeDistance', distance.toString());
+                localStorage.setItem('calculatedFare', fare.toString());
+                localStorage.setItem('travelTime', travelTime.toString());
+                localStorage.setItem('routeOrigin', pickup);
+                localStorage.setItem('routeDestination', dropoff);
+                localStorage.setItem('calculationMethod', 'Fallback Estimation');
+                
+                // Update display
+                document.getElementById('distanceValue').textContent = `${distance} km (est)`;
+                document.getElementById('fareValue').textContent = `₹${fare}`;
+                document.getElementById('travelTimeValue').textContent = `${travelTime} min`;
+                
+                // Update proceed button
+                const proceedBtn = document.getElementById('proceedBtn');
+                proceedBtn.disabled = false;
+                proceedBtn.innerHTML = `<i class="fas fa-credit-card"></i> Proceed to Payment (₹${fare})`;
+                proceedBtn.style.background = '#4CAF50';
+                
+                console.log('✅ Fallback calculation completed');
+            });
+        }
+
+        function calculateFareByPassType(distance, passType) {
+            let baseFare = 15; // Minimum fare
+            let ratePerKm = 4.0; // Default rate
+            
+            // Adjust rates based on distance
+            if (distance <= 5) {
+                ratePerKm = 4.0; // City routes
+            } else if (distance <= 20) {
+                ratePerKm = 3.5; // Suburban routes
+            } else if (distance <= 50) {
+                ratePerKm = 3.0; // Inter-city routes
+            } else {
+                ratePerKm = 2.5; // Long distance routes
+            }
+            
+            // Adjust rates based on pass type
+            if (passType.includes('Weekly')) {
+                ratePerKm *= 0.85; // 15% discount
+            } else if (passType.includes('Monthly')) {
+                ratePerKm *= 0.75; // 25% discount
+            } else if (passType.includes('Student')) {
+                ratePerKm *= 0.60; // 40% discount
+            } else if (passType.includes('Quarterly')) {
+                ratePerKm *= 0.70; // 30% discount
+            } else if (passType.includes('Annual')) {
+                ratePerKm *= 0.65; // 35% discount
+            } else if (passType.includes('Daily')) {
+                ratePerKm *= 0.90; // 10% discount
+            }
+            
+            const calculatedFare = Math.max(baseFare, Math.round(distance * ratePerKm));
+            return calculatedFare;
+        }
+
+        function estimateDistanceSimple(pickup, dropoff) {
+            const p = pickup.toLowerCase();
+            const d = dropoff.toLowerCase();
+            
+            // Known distances for major routes
+            const knownRoutes = {
+                'santosh nagar-colony kumarwadi': 5.2,
+                'colony kumarwadi-santosh nagar': 5.2,
+                'santoshnagar-kumarwadi': 5.2,
+                'kumarwadi-santoshnagar': 5.2,
+                'hyderabad-warangal': 148,
+                'warangal-hyderabad': 148,
+                'hyderabad-secunderabad': 15,
+                'secunderabad-hyderabad': 15,
+                'warangal-hanumakonda': 12,
+                'hanumakonda-warangal': 12,
+                'gachibowli-hitech city': 4.8,
+                'hitech city-gachibowli': 4.8
+            };
+            
+            // Check for known routes
+            const routeKey1 = `${p.split(' ')[0]}-${d.split(' ')[0]}`;
+            const routeKey2 = `${d.split(' ')[0]}-${p.split(' ')[0]}`;
+            
+            if (knownRoutes[routeKey1]) {
+                return knownRoutes[routeKey1];
+            } else if (knownRoutes[routeKey2]) {
+                return knownRoutes[routeKey2];
+            }
+            
+            // Default estimation
+            if (p.includes('hyderabad') || d.includes('hyderabad')) {
+                return 25; // Average distance to/from Hyderabad
+            } else if (p.includes('warangal') || d.includes('warangal')) {
+                return 35; // Average distance to/from Warangal
+            }
+            
+            return 18; // Default estimate
+        }
+
+        function proceedToPayment() {
+            const pickup = document.getElementById('pickup').value.trim();
+            const dropoff = document.getElementById('dropoff').value.trim();
+            
+            console.log('💳 Proceeding to payment...');
+            console.log('📍 Route:', pickup, '→', dropoff);
+            
+            if (!pickup || !dropoff) {
+                alert('Please enter both pickup and drop-off locations.');
+                return;
+            }
+            
+            // Verify we have calculated fare
+            const calculatedFare = localStorage.getItem('calculatedFare');
+            const routeDistance = localStorage.getItem('routeDistance');
+            
+            if (!calculatedFare || !routeDistance) {
+                alert('Please wait for distance calculation to complete.');
+                return;
+            }
+            
+            console.log('💰 Payment details:', {
+                fare: calculatedFare,
+                distance: routeDistance,
+                route: pickup + ' → ' + dropoff
+            });
+            
+            // Store complete route information for payment
+            localStorage.setItem('selectedRoute', pickup + ' → ' + dropoff);
+            localStorage.setItem('routeOrigin', pickup);
+            localStorage.setItem('routeDestination', dropoff);
+            
+            // Show loading state
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Payment...';
+            proceedBtn.disabled = true;
+            
+            // Redirect to payment
+            setTimeout(() => {
+                console.log('🔄 Redirecting to payment page...');
+                window.location.href = '/payment';
+            }, 1000);
+        }
+
+        // Make setupGoogleMap globally available for the callback
+        window.setupGoogleMap = setupGoogleMap;
+    </script>
+</body>
+</html>

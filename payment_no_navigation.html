@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Payment - Smart Bus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .amount-display {
+      text-align: center;
+      background: #f8fff8;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 2px solid #4CAF50;
+    }
+    
+    .amount-value {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #4CAF50;
+      margin: 10px 0;
+    }
+    
+    .payment-details {
+      background: #e8f5e8;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 2px solid #4CAF50;
+    }
+    
+    .upi-apps {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .upi-app {
+      background: white;
+      border: 2px solid #4CAF50;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .upi-app:hover {
+      background: #f8fff8;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .upi-app.selected {
+      background: #e8f5e8;
+      border-color: #2e7d32;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+    }
+    
+    .upi-icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .upi-name {
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .payment-instructions {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      display: none;
+    }
+    
+    .payment-instructions.show {
+      display: block;
+    }
+    
+    .copy-btn {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    
+    .copy-btn:hover {
+      background: #1976D2;
+    }
+    
+    .pay-btn {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      margin: 10px 0;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    
+    .pay-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    .back-btn {
+      background: #666;
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      margin-top: 10px;
+    }
+    
+    .success-message {
+      background: #e8f5e8;
+      border: 2px solid #4CAF50;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      text-align: center;
+      display: none;
+    }
+    
+    .success-message.show {
+      display: block;
+    }
+    
+    .qr-code {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .qr-placeholder {
+      width: 200px;
+      height: 200px;
+      background: #f0f0f0;
+      border: 2px dashed #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      border-radius: 10px;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>💳 Smart Payment</h2>
+      <p>No page navigation • Direct payment details</p>
+    </div>
+    
+    <div class="content">
+      <!-- Amount Display -->
+      <div class="amount-display">
+        <div>Amount to Pay</div>
+        <div class="amount-value">₹<span id="payAmount">50</span></div>
+        <div>Service: <span id="passType">Smart Bus Pass</span></div>
+      </div>
+
+      <!-- UPI App Information -->
+      <div class="payment-details">
+        <h3><i class="fas fa-info-circle"></i> UPI App Information</h3>
+        <div id="upiInfo">
+          <p><strong>📱 Mobile Devices:</strong> UPI apps can open directly</p>
+          <p><strong>💻 Laptop/Desktop:</strong> UPI apps don't work - use manual payment</p>
+          <p><strong>✅ Recommended:</strong> Use your mobile phone for UPI payments</p>
+        </div>
+      </div>
+
+      <!-- Payment Details -->
+      <div class="payment-details">
+        <h3><i class="fas fa-info-circle"></i> Payment Information</h3>
+        <p><strong>Pay To:</strong> Lingam Manoj Kumar</p>
+        <p><strong>UPI ID:</strong> 8340927497@ibl <button class="copy-btn" onclick="copyToClipboard('8340927497@ibl')">Copy</button></p>
+        <p><strong>Phone:</strong> +91 8340927497 <button class="copy-btn" onclick="copyToClipboard('+91 8340927497')">Copy</button></p>
+        <p><strong>Amount:</strong> ₹<span id="payAmount2">50</span></p>
+        <p><strong>Note:</strong> Smart Bus <span id="passType2">Pass</span></p>
+      </div>
+
+      <!-- UPI Apps Selection -->
+      <h3>Choose Your Payment Method</h3>
+      <div class="upi-apps">
+        <div class="upi-app" onclick="selectPaymentMethod('phonepe')">
+          <div class="upi-icon" style="color: #5f259f;">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <div class="upi-name">PhonePe</div>
+          <div style="font-size: 12px; color: #666;">Tap to select</div>
+        </div>
+
+        <div class="upi-app" onclick="selectPaymentMethod('gpay')">
+          <div class="upi-icon" style="color: #4285f4;">
+            <i class="fab fa-google-pay"></i>
+          </div>
+          <div class="upi-name">Google Pay</div>
+          <div style="font-size: 12px; color: #666;">Tap to select</div>
+        </div>
+
+        <div class="upi-app" onclick="selectPaymentMethod('paytm')">
+          <div class="upi-icon" style="color: #00baf2;">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <div class="upi-name">Paytm</div>
+          <div style="font-size: 12px; color: #666;">Tap to select</div>
+        </div>
+
+        <div class="upi-app" onclick="selectPaymentMethod('any')">
+          <div class="upi-icon" style="color: #ff6b35;">
+            <i class="fas fa-university"></i>
+          </div>
+          <div class="upi-name">Any UPI App</div>
+          <div style="font-size: 12px; color: #666;">Use any app</div>
+        </div>
+      </div>
+
+      <!-- Payment Instructions (Hidden by default) -->
+      <div class="payment-instructions" id="paymentInstructions">
+        <h3><i class="fas fa-mobile-alt"></i> Payment Instructions</h3>
+        <div id="instructionContent">
+          <!-- Instructions will be populated by JavaScript -->
+        </div>
+        
+        <!-- QR Code -->
+        <div class="qr-code">
+          <h4 style="margin: 15px 0 10px 0; color: #333;">📱 Scan QR Code to Pay</h4>
+          <div id="qrCodeContainer">
+            <div class="qr-placeholder" id="qrPlaceholder">
+              <div>
+                <i class="fas fa-qrcode" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+                Generating QR Code...<br>
+                <small>(Scan with any UPI app)</small>
+              </div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: #666; margin-top: 10px;">
+            Scan this QR code with any UPI app (PhonePe, GPay, Paytm, BHIM, etc.)
+          </p>
+        </div>
+        
+        <button class="pay-btn" onclick="startPaymentVerification()">
+          <i class="fas fa-check-circle"></i> I've Made the Payment
+        </button>
+      </div>
+
+      <!-- Success Message -->
+      <div class="success-message" id="successMessage">
+        <div style="color: #4CAF50; font-size: 3em; margin-bottom: 15px;">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 style="color: #4CAF50;">Payment Processing!</h3>
+        <p>We're verifying your payment and will send email confirmation shortly.</p>
+        <p><strong>Email:</strong> <span id="userEmail">your-email@example.com</span></p>
+      </div>
+
+      <a href="/route" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Back to Route Selection
+      </a>
+    </div>
+  </div>
+
+  <script>
+    let selectedApp = '';
+    let userEmail = '';
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('💳 Smart payment page loading...');
+      loadPaymentData();
+      getUserEmail();
+    });
+
+    function loadPaymentData() {
+      let selectedPass = localStorage.getItem('selectedPass') || 'Daily Pass';
+      let selectedPrice = localStorage.getItem('selectedPrice') || '₹50';
+      let calculatedFare = localStorage.getItem('calculatedFare');
+
+      if (calculatedFare && calculatedFare !== 'null') {
+        selectedPrice = `₹${calculatedFare}`;
+      }
+
+      const numericPrice = parseInt(selectedPrice.replace('₹', '').replace(',', '')) || 50;
+
+      document.getElementById('passType').textContent = selectedPass;
+      document.getElementById('passType2').textContent = selectedPass;
+      document.getElementById('payAmount').textContent = numericPrice;
+      document.getElementById('payAmount2').textContent = numericPrice;
+      
+      console.log('✅ Payment data loaded:', {
+        pass: selectedPass,
+        price: selectedPrice,
+        amount: numericPrice
+      });
+    }
+
+    function getUserEmail() {
+      userEmail = localStorage.getItem('userEmail') || 
+                 localStorage.getItem('user_email') || 
+                 sessionStorage.getItem('userEmail') || 
+                 'mk4829779@gmail.com';
+      
+      document.getElementById('userEmail').textContent = userEmail;
+      console.log('📧 User email:', userEmail);
+    }
+
+    function selectPaymentMethod(app) {
+      // Remove previous selection
+      document.querySelectorAll('.upi-app').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
+      // Add selection to clicked app
+      event.currentTarget.classList.add('selected');
+      selectedApp = app;
+      
+      console.log('💳 Selected payment method:', app);
+      
+      // Show payment instructions
+      showPaymentInstructions(app);
+      
+      // Generate QR code for the selected payment method
+      generateQRCode(app);
+    }
+
+    function generateQRCode(app) {
+      const amount = document.getElementById('payAmount').textContent;
+      const passType = document.getElementById('passType').textContent;
+      
+      // UPI payment URL format
+      const upiId = '8340927497@ibl';
+      const merchantName = 'Lingam Manoj Kumar';
+      const note = `Smart Bus ${passType}`;
+      
+      // Create UPI payment URL
+      const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+      
+      console.log('🔗 Generated UPI URL:', upiUrl);
+      
+      // Generate QR code using QR Server API
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+      
+      // Create QR code image
+      const qrContainer = document.getElementById('qrCodeContainer');
+      qrContainer.innerHTML = `
+        <img src="${qrApiUrl}" 
+             alt="UPI Payment QR Code" 
+             style="width: 200px; height: 200px; border: 2px solid #4CAF50; border-radius: 10px; background: white; padding: 10px;"
+             onload="console.log('✅ QR Code loaded successfully')"
+             onerror="showQRError()">
+      `;
+      
+      console.log('📱 QR Code generated for UPI payment');
+    }
+
+    function showQRError() {
+      console.error('❌ QR Code failed to load');
+      const qrContainer = document.getElementById('qrCodeContainer');
+      qrContainer.innerHTML = `
+        <div class="qr-placeholder" style="background: #ffebee; border-color: #f44336; color: #d32f2f;">
+          <div>
+            <i class="fas fa-exclamation-triangle" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+            QR Code unavailable<br>
+            <small>Use manual payment details above</small>
+          </div>
+        </div>
+      `;
+    }
+
+    function showPaymentInstructions(app) {
+      const amount = document.getElementById('payAmount').textContent;
+      const passType = document.getElementById('passType').textContent;
+      
+      let appName = app.toUpperCase();
+      let instructions = '';
+      
+      if (app === 'phonepe') {
+        appName = 'PhonePe';
+        instructions = `
+          <p><strong>Using PhonePe:</strong></p>
+          <ol>
+            <li>Open PhonePe app on your phone</li>
+            <li>Tap "Send Money" or "Pay"</li>
+            <li>Enter UPI ID: <strong>8340927497@ibl</strong></li>
+            <li>Enter amount: <strong>₹${amount}</strong></li>
+            <li>Add note: <strong>Smart Bus ${passType}</strong></li>
+            <li>Complete payment with your UPI PIN</li>
+          </ol>
+        `;
+      } else if (app === 'gpay') {
+        appName = 'Google Pay';
+        instructions = `
+          <p><strong>Using Google Pay:</strong></p>
+          <ol>
+            <li>Open Google Pay app on your phone</li>
+            <li>Tap "Pay" or "Send"</li>
+            <li>Enter UPI ID: <strong>8340927497@ibl</strong></li>
+            <li>Enter amount: <strong>₹${amount}</strong></li>
+            <li>Add note: <strong>Smart Bus ${passType}</strong></li>
+            <li>Complete payment with your UPI PIN</li>
+          </ol>
+        `;
+      } else if (app === 'paytm') {
+        appName = 'Paytm';
+        instructions = `
+          <p><strong>Using Paytm:</strong></p>
+          <ol>
+            <li>Open Paytm app on your phone</li>
+            <li>Tap "Pay" or "Send Money"</li>
+            <li>Enter UPI ID: <strong>8340927497@ibl</strong></li>
+            <li>Enter amount: <strong>₹${amount}</strong></li>
+            <li>Add note: <strong>Smart Bus ${passType}</strong></li>
+            <li>Complete payment with your UPI PIN</li>
+          </ol>
+        `;
+      } else {
+        appName = 'Any UPI App';
+        instructions = `
+          <p><strong>Using Any UPI App:</strong></p>
+          <ol>
+            <li>Open your preferred UPI app (PhonePe, GPay, Paytm, BHIM, etc.)</li>
+            <li>Choose "Send Money" or "Pay" option</li>
+            <li>Enter UPI ID: <strong>8340927497@ibl</strong></li>
+            <li>Enter amount: <strong>₹${amount}</strong></li>
+            <li>Add note: <strong>Smart Bus ${passType}</strong></li>
+            <li>Complete payment with your UPI PIN</li>
+          </ol>
+        `;
+      }
+      
+      instructions += `
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+          <h4 style="margin: 0 0 10px 0; color: #1976d2;">💡 Quick Copy Details:</h4>
+          <p style="margin: 5px 0;"><strong>UPI ID:</strong> 8340927497@ibl <button class="copy-btn" onclick="copyToClipboard('8340927497@ibl')">Copy</button></p>
+          <p style="margin: 5px 0;"><strong>Amount:</strong> ₹${amount} <button class="copy-btn" onclick="copyToClipboard('${amount}')">Copy</button></p>
+          <p style="margin: 5px 0;"><strong>Note:</strong> Smart Bus ${passType} <button class="copy-btn" onclick="copyToClipboard('Smart Bus ${passType}')">Copy</button></p>
+        </div>
+        
+        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+          <h4 style="margin: 0 0 10px 0; color: #f57c00;">⚠️ Important:</h4>
+          <p style="margin: 5px 0; color: #f57c00;">• This is a REAL money transaction</p>
+          <p style="margin: 5px 0; color: #f57c00;">• Only click "I've Made the Payment" after completing payment</p>
+          <p style="margin: 5px 0; color: #f57c00;">• You'll receive email confirmation after verification</p>
+        </div>
+      `;
+      
+      document.getElementById('instructionContent').innerHTML = instructions;
+      document.getElementById('paymentInstructions').classList.add('show');
+      
+      // Scroll to instructions
+      document.getElementById('paymentInstructions').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(function() {
+        // Show temporary success message
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.background = '#4CAF50';
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '#2196F3';
+        }, 2000);
+        
+        console.log('📋 Copied to clipboard:', text);
+      }).catch(function(err) {
+        console.error('❌ Could not copy text: ', err);
+        alert('Could not copy to clipboard. Please copy manually: ' + text);
+      });
+    }
+
+    function startPaymentVerification() {
+      const amount = document.getElementById('payAmount').textContent;
+      const passType = document.getElementById('passType').textContent;
+      
+      console.log('🔍 Starting payment verification...');
+      
+      // Show confirmation dialog
+      const confirmed = confirm(`💳 PAYMENT CONFIRMATION\n\nHave you completed the UPI payment?\n\nAmount: ₹${amount}\nTo: 8340927497@ibl\nApp: ${selectedApp.toUpperCase()}\n\n✅ Check your UPI app transaction history\n✅ Verify money was deducted from your account\n✅ Confirm payment shows as successful\n\nClick OK ONLY if you have actually sent the money.`);
+      
+      if (!confirmed) {
+        console.log('❌ Payment not confirmed by user');
+        return;
+      }
+      
+      // Hide instructions and show success message
+      document.getElementById('paymentInstructions').classList.remove('show');
+      document.getElementById('successMessage').classList.add('show');
+      
+      // Scroll to success message
+      document.getElementById('successMessage').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+      
+      // Process payment completion
+      processPaymentCompletion(amount, passType);
+    }
+
+    function processPaymentCompletion(amount, passType) {
+      console.log('🎉 Processing payment completion...');
+      
+      // Prepare completion data
+      const completionData = {
+        pass_type: passType,
+        amount: amount,
+        route: localStorage.getItem('selectedRoute') || 'City Transportation',
+        distance: localStorage.getItem('calculatedDistance') || '0',
+        payment_method: `UPI (${selectedApp.toUpperCase()})`,
+        user_email: userEmail,
+        user_name: localStorage.getItem('userName') || 'Smart Bus User',
+        transaction_id: `SMART${Date.now()}`,
+        verified: true,
+        device_type: 'Web',
+        transaction_type: 'new_pass'
+      };
+      
+      console.log('📧 Sending payment completion with email notification:', completionData);
+      
+      // Call backend to complete payment and send email
+      fetch('/complete-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(completionData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('✅ Payment completion successful');
+          console.log('📧 Email sent:', data.email_sent);
+          console.log('📧 Email address:', data.email_address);
+          
+          // Update success message
+          document.getElementById('successMessage').innerHTML = `
+            <div style="color: #4CAF50; font-size: 3em; margin-bottom: 15px;">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 style="color: #4CAF50;">Payment Successful!</h3>
+            <p>Your bus pass has been activated!</p>
+            <p><strong>Receipt sent to:</strong> ${data.email_address}</p>
+            <p><strong>Receipt #:</strong> ${data.receipt?.receipt_number || 'N/A'}</p>
+            <button class="pay-btn" onclick="window.location.href='/dashboard'" style="margin-top: 15px;">
+              <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+            </button>
+          `;
+          
+          // Store success data
+          localStorage.setItem('paymentSuccess', JSON.stringify({
+            ...completionData,
+            receipt: data.receipt,
+            email_sent: data.email_sent,
+            email_address: data.email_address,
+            timestamp: new Date().toISOString()
+          }));
+          
+        } else {
+          console.error('❌ Payment completion failed:', data.error);
+          document.getElementById('successMessage').innerHTML = `
+            <div style="color: #f44336; font-size: 3em; margin-bottom: 15px;">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <h3 style="color: #f44336;">Processing Error</h3>
+            <p>Payment processing failed. Please contact support.</p>
+            <p><strong>Error:</strong> ${data.error}</p>
+          `;
+        }
+      })
+      .catch(error => {
+        console.error('❌ Payment completion error:', error);
+        document.getElementById('successMessage').innerHTML = `
+          <div style="color: #f44336; font-size: 3em; margin-bottom: 15px;">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <h3 style="color: #f44336;">Network Error</h3>
+          <p>Could not process payment. Please check your connection and try again.</p>
+          <p><strong>Error:</strong> ${error.message}</p>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>

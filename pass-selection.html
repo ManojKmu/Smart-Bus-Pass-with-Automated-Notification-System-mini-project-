@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Bus Pass - Smart Bus</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      overflow-x: hidden;
+    }
+
+    /* Ensure no browser default margins */
+    html {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+
+    /* Fixed Sidebar */
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      left: 0 !important;
+      top: 0 !important;
+      z-index: 1000;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      margin: 0 !important;
+      padding: 0;
+      border: none;
+      outline: none;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 20px 0;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 15px 25px;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.1);
+      border-left-color: #4CAF50;
+      transform: translateX(5px);
+    }
+
+    .nav-item.active {
+      background: rgba(255,255,255,0.2);
+      border-left-color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .nav-item i {
+      margin-right: 12px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .user-details h4 {
+      margin: 0;
+      font-size: 0.9em;
+    }
+
+    .user-details p {
+      margin: 0;
+      font-size: 0.8em;
+      opacity: 0.8;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      padding: 30px;
+      background: #f5f7fa;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 40px;
+    }
+
+    .back-btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .back-btn:hover {
+      background: #45a049;
+      transform: translateX(-5px);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin: 0;
+      color: #2c3e50;
+    }
+
+    .subtitle {
+      font-size: 1.2em;
+      color: #7f8c8d;
+      margin-top: 10px;
+    }
+
+    .steps {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .step {
+      padding: 15px 30px;
+      border-radius: 25px;
+      background-color: rgba(102, 126, 234, 0.1);
+      margin: 0 10px;
+      font-weight: bold;
+      color: #667eea;
+      border: 2px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .step.active {
+      background-color: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      padding: 30px;
+      position: relative;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #4CAF50, #45a049);
+    }
+
+    .tag {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .price {
+      font-size: 2.5em;
+      color: #4CAF50;
+      font-weight: bold;
+      margin: 20px 0 10px 0;
+    }
+
+    .duration {
+      font-size: 1.1em;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .card h3 {
+      margin: 15px 0;
+      color: #2c3e50;
+      font-size: 1.5em;
+    }
+
+    .desc {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .features {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 25px;
+    }
+
+    .features li {
+      margin-bottom: 10px;
+      color: #4CAF50;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+
+    .features li::before {
+      content: '✓';
+      background: #4CAF50;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .select-btn {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 15px 25px;
+      border: none;
+      border-radius: 25px;
+      width: 100%;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .select-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .popular {
+      position: relative;
+    }
+
+    .popular::after {
+      content: 'MOST POPULAR';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FF6B6B;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 15px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .savings {
+      background: #E8F5E8;
+      color: #4CAF50;
+      padding: 8px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 10px;
+    }
+
+    /* Mobile Responsive */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1001;
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 250px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      .steps {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .step {
+        margin: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-content {
+        padding: 15px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="dashboard-container">
+    <!-- Fixed Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="{{ url_for('static', filename='Smartbus_logo_(1).jpg') }}" alt="Smart Bus Logo" class="sidebar-logo">
+        <h3 class="sidebar-title">Smart Bus</h3>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item">
+          <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="#" class="nav-item active">
+          <i class="fas fa-shopping-cart"></i> Buy Pass
+        </a>
+        <a href="/passes" class="nav-item">
+          <i class="fas fa-ticket-alt"></i> My Passes
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-bell"></i> Notifications
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-user"></i> Profile
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-details">
+            <h4 id="userName">Loading...</h4>
+            <p id="userEmail">Loading...</p>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <div class="container">
+    <a href="/dashboard" class="back-btn">
+      ← Back to Dashboard
+    </a>
+    
+    <div class="header">
+      <h1>Purchase Bus Pass</h1>
+      <div class="subtitle">Select your pass, choose your route, and complete payment</div>
+    </div>
+
+    <div class="steps">
+      <div class="step active">1. Select Pass</div>
+      <div class="step">2. Choose Route</div>
+      <div class="step">3. Payment</div>
+    </div>
+
+    
+    <div class="cards">
+      <!-- Daily Pass -->
+      <div class="card">
+        <div class="tag">Daily</div>
+        <div class="price">₹75</div>
+        <div class="duration">1 day</div>
+        <h3>Daily Pass</h3>
+        <div class="desc">Perfect for occasional travelers. Single day unlimited travel within the city.</div>
+        <div class="savings">Pay as you go</div>
+        <ul class="features">
+          <li>Unlimited rides for 1 day</li>
+          <li>All city routes included</li>
+          <li>Fixed price regardless of distance</li>
+          <li>Instant activation</li>
+        </ul>
+        <a href="/route" class="select-btn" onclick="selectPass('Daily Pass', '₹75')">
+          Select Daily Pass
+        </a>
+      </div>
+
+      <!-- Weekly Pass -->
+      <div class="card">
+        <div class="tag">Weekly</div>
+        <div class="price">₹300</div>
+        <div class="duration">7 days</div>
+        <h3>Weekly Pass</h3>
+        <div class="desc">Great for regular commuters. Fixed price for unlimited travel within the city.</div>
+        <div class="savings">Save vs Daily Tickets</div>
+        <ul class="features">
+          <li>Unlimited rides for 7 days</li>
+          <li>All city routes included</li>
+          <li>Fixed price regardless of distance</li>
+          <li>Priority customer support</li>
+        </ul>
+        <a href="/route" class="select-btn" onclick="selectPass('Weekly Pass', '₹300')">
+          Select Weekly Pass
+        </a>
+      </div>
+
+      <!-- Monthly Pass -->
+      <div class="card popular">
+        <div class="tag">Monthly</div>
+        <div class="price">₹1,000</div>
+        <div class="duration">30 days</div>
+        <h3>Monthly Pass</h3>
+        <div class="desc">Best value for daily commuters. Maximum convenience and savings.</div>
+        <div class="savings">Save 33% vs Daily</div>
+        <ul class="features">
+          <li>Unlimited rides for 30 days</li>
+          <li>All city routes included</li>
+          <li>Fixed price regardless of distance</li>
+          <li>Priority boarding</li>
+          <li>Mobile app integration</li>
+        </ul>
+        <a href="/route" class="select-btn" onclick="selectPass('Monthly Pass', '₹1,000')">
+          Select Monthly Pass
+        </a>
+      </div>
+
+      <!-- Student Monthly Pass -->
+      <div class="card">
+        <div class="tag">Student</div>
+        <div class="price">₹600</div>
+        <div class="duration">30 days</div>
+        <h3>Student Monthly Pass</h3>
+        <div class="desc">Special discount for students. Present valid student ID at verification.</div>
+        <div class="savings">40% Student Discount</div>
+        <ul class="features">
+          <li>Unlimited rides for 30 days</li>
+          <li>40% student discount applied</li>
+          <li>Valid student ID required</li>
+          <li>All city routes included</li>
+          <li>Study-friendly timings</li>
+        </ul>
+        <a href="/route" class="select-btn" onclick="selectPass('Student Monthly Pass', '₹600')">
+          Select Student Pass
+        </a>
+      </div>
+
+      <!-- Quarterly Pass -->
+      <div class="card">
+        <div class="tag">Quarterly</div>
+        <div class="price">₹2,700</div>
+        <div class="duration">90 days</div>
+        <h3>Quarterly Pass</h3>
+        <div class="desc">Extended savings for committed travelers. Best for long-term planning.</div>
+        <div class="savings">Save 40% vs Daily</div>
+        <ul class="features">
+          <li>Unlimited rides for 90 days</li>
+          <li>All city routes included</li>
+          <li>Fixed price regardless of distance</li>
+          <li>Priority boarding</li>
+          <li>Route flexibility</li>
+          <li>Extended customer support</li>
+        </ul>
+        <a href="/route" class="select-btn" onclick="selectPass('Quarterly Pass', '₹2,700')">
+          Select Quarterly Pass
+        </a>
+      </div>
+
+      <!-- Annual Pass -->
+      <div class="card">
+        <div class="tag">Annual</div>
+        <div class="price">₹10,000</div>
+        <div class="duration">365 days</div>
+        <h3>Annual Pass</h3>
+        <div class="desc">Ultimate pass for year-round travelers. Maximum value and benefits.</div>
+        <div class="savings">Save 45% vs Daily</div>
+        <ul class="features">
+          <li>Unlimited rides for 365 days</li>
+          <li>All city routes included</li>
+          <li>Fixed price regardless of distance</li>
+          <li>Priority boarding</li>
+          <li>Route flexibility</li>
+          <li>Premium customer support</li>
+          <li>Travel insurance included</li>
+        </ul>
+        <a href="/route" class="select-btn" onclick="selectPass('Annual Pass', '₹10,000')">
+          Select Annual Pass
+        </a>
+      </div>
+    </div>
+  </div>
+    </div>
+  </div>
+
+  <script>
+    // Load user data on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const name = localStorage.getItem("userName");
+      const email = localStorage.getItem("userEmail");
+
+      if (name && email) {
+        document.getElementById("userName").textContent = name;
+        document.getElementById("userEmail").textContent = email;
+        document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
+      } else {
+        console.log('❌ No user session found, redirecting to login...');
+        window.location.href = "/";
+      }
+    });
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    function logout() {
+      console.log('🚪 Logging out user...');
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      const logoutMessage = document.createElement('div');
+      logoutMessage.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #4CAF50;
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-size: 16px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      `;
+      logoutMessage.textContent = '✅ Logged out successfully!';
+      document.body.appendChild(logoutMessage);
+      
+      setTimeout(() => {
+        window.location.href = "/logout";
+      }, 1000);
+    }
+
+    function selectPass(passType, price) {
+      // Store selected pass in localStorage for next step
+      localStorage.setItem('selectedPass', passType);
+      localStorage.setItem('selectedPrice', price);
+      
+      console.log('Selected pass:', passType, 'Price:', price);
+      
+      // Add visual feedback
+      event.target.innerHTML = 'Selected! Proceeding...';
+      event.target.style.background = '#4CAF50';
+      
+      // Small delay for user feedback
+      setTimeout(() => {
+        // The href will handle navigation
+      }, 500);
+    }
+  </script>
+</body>
+</html>

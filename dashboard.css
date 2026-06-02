@@ -1,0 +1,171 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+}
+
+.sidebar {
+  width: 180px;
+  color: white;
+  padding: 20px;
+  height: 100vh;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sidebar li {
+  margin: 15px 0;
+}
+
+.sidebar a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.main-content {
+  flex: 1;
+  padding: 30px;
+  background-color: #f4f4f4;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.alert-banner {
+  background-color: #ffeeba;
+  padding: 10px;
+  margin: 20px 0;
+  border-radius: 5px;
+}
+
+.summary-cards {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 5px;
+  flex: 1;
+  text-align: center;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.pass-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pass {
+  background-color: #e2e6ea;
+  padding: 10px;
+  border-radius: 5px;
+}
+.notification-box {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #153b06;
+  color: #3c763d;
+  border-left: 4px solid #3c763d;
+  font-size: 14px;
+  display: none;
+  height: 200px;
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 89vh;
+  background-color: orange;
+  color: white;
+  padding: 20px;
+  margin-bottom: 3xxxx0px;
+  cursor: pointer;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #ccc;
+  text-align: center;
+}
+
+.user-info-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.user-circle {
+  width: 40px;
+  height: 40px;
+  background-color: orange;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: rgb(47, 0, 255);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.logout-btn i {
+  margin-right: 5px;
+}
+.section{
+  display: none;
+  padding: 0px;
+  margin: 10px;
+  /* background-color: #1dea0a; light gray or any color */
+  border-radius: 10px;
+  border: 4px solid black;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.profile:hover{
+  cursor: pointer;
+  background-color: #1dea0a;
+}
+.notify:hover{
+  cursor: pointer;
+  background-color: #c80aea;
+}
+.my-passes:hover{
+  cursor: pointer;
+  background-color: #bbff00;
+}
+.buy:hover{
+  cursor: pointer;
+  background-color: yellow;
+}
+.home:hover{
+  cursor: pointer;
+  background-color: indigo;
+}
+img{
+  height: 80px;
+}

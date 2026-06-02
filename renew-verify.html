@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - Smart Bus</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='renew-verify.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="form-box">
+            <h2>Verify OTP</h2>
+            <p>We've sent a 6-digit OTP to <strong>{{ email }}</strong></p>
+            
+            <form action="/verify-renew-otp" method="POST" id="verifyForm">
+                <input type="hidden" name="email" value="{{ email }}">
+                
+                {% if error %}
+                <div class="error-message" style="display: block;">
+                    {{ error }}
+                </div>
+                {% endif %}
+                
+                {% if success %}
+                <div class="success-message" style="display: block;">
+                    {{ success }}
+                </div>
+                {% endif %}
+                
+                {% if info %}
+                <div class="info-message" style="display: block; background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb;">
+                    {{ info }}
+                </div>
+                {% endif %}
+                
+                <div class="otp-container">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                </div>
+                
+                <input type="hidden" name="otp" id="otpValue">
+                
+                <button type="submit" class="submit-btn">Verify & Renew Pass</button>
+            </form>
+            
+            <div class="resend-section">
+                <p>Didn't receive the OTP?</p>
+                <button class="resend-btn" onclick="resendOTP('{{ email }}')">Resend OTP</button>
+            </div>
+            
+            <div class="back-link">
+                <a href="/renew-pass">← Change Email</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='renew-verify.js') }}"></script>
+</body>
+</html>

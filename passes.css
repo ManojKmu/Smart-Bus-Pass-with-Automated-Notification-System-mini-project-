@@ -1,0 +1,31 @@
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #e0d3d3;
+}
+
+.box button {
+  padding: 10px 20px;
+  margin: 20px;
+}
+
+input, button {
+  padding: 10px;
+  margin: 5px;
+}
+fieldset {
+  border: 2px solid #000000;
+  padding: 70px;
+  border-radius: 8px;
+  background: #c70808;
+  display: inline-block;
+  margin-top: 200px;
+  margin-buttom: 200px;
+}
+.b1:hover {
+color: blue;
+background-color: chartreuse;
+}
+.b2:hover {
+  background-color: darkgreen;
+}

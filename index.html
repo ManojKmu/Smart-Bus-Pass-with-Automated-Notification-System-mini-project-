@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartPass Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    img{
+        width:1900px;
+        height:100px;
+        margin-bottom:10px;
+    }
+    .google-btn {
+        background: #4285f4;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        margin: 10px 0;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .google-btn:hover {
+        background: #357ae8;
+    }
+    .google-signin-container {
+        width: 100%;
+        margin: 10px 0;
+    }
+    .divider {
+        text-align: center;
+        margin: 20px 0;
+        color: #666;
+        position: relative;
+    }
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #ddd;
+        z-index: 1;
+    }
+    .divider::after {
+        content: 'OR';
+        background: white;
+        padding: 0 15px;
+        position: relative;
+        z-index: 2;
+    }
+    .error-message {
+        animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <img src="{{ url_for('static', filename='Smartbus_logo_(1).jpg') }}" alt="SmartPass Logo" class="logo" />
+    <h2>Welcome to SmartPass Message Notifier</h2>
+    
+    <!-- Success Message -->
+    {% if success %}
+    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c3e6cb; animation: fadeIn 0.3s ease-in;">
+      {{ success }}
+    </div>
+    {% endif %}
+    
+    <!-- Error Message -->
+    {% if error %}
+    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #f5c6cb; animation: fadeIn 0.3s ease-in;">
+      {{ error }}
+    </div>
+    {% endif %}
+    
+    <!-- Google Sign-In Button -->
+    <div class="google-signin-container">
+      <!-- Mobile Access Info -->
+      <div id="mobileAccessInfo" style="display: none; background: #e3f2fd; color: #1565c0; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #90caf9;">
+        📱 <strong>Mobile Device Detected!</strong><br>
+        <strong>✅ Recommended:</strong> Use the email/password login form below for reliable mobile access.<br>
+        <small>Google Sign-In works best on localhost. Email/password login works everywhere!</small>
+      </div>
+      
+      <!-- Google OAuth Warning -->
+      <div id="googleOAuthWarning" style="display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ffeaa7;">
+        ℹ️ <strong>About Google Sign-In on Mobile:</strong><br>
+        Google OAuth requires authorized domains. Mobile IP addresses may not work.<br>
+        <strong>✅ Solution:</strong> Use email/password login below - it works perfectly on mobile!
+      </div>
+      
+      <!-- Warning message for Live Server users -->
+      <div id="liveServerWarning" style="display: none; background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ffeaa7;">
+        ⚠️ <strong>Important:</strong> You're using Live Server. For Google OAuth to work, please use Flask: <br>
+        1. Run <code>python app.py</code> in terminal<br>
+        2. Visit <code>http://localhost:5000</code>
+      </div>
+      
+      <!-- Custom Google Sign-In Button (More Reliable) -->
+      <button type="button" class="google-btn" onclick="initiateGoogleOAuth()" id="customGoogleBtn">
+        <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px; vertical-align: middle;">
+          <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+          <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.04a4.8 4.8 0 0 1-7.18-2.53H1.83v2.07A8 8 0 0 0 8.98 17z"/>
+          <path fill="#FBBC05" d="M4.5 10.49a4.8 4.8 0 0 1 0-3.07V5.35H1.83a8 8 0 0 0 0 7.28l2.67-2.14z"/>
+          <path fill="#EA4335" d="M8.98 4.72c1.16 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.35L4.5 7.42a4.77 4.77 0 0 1 4.48-2.7z"/>
+        </svg>
+        Sign in with Google
+      </button>
+      
+      <!-- Hidden: Google One Tap (backup method) -->
+      <div id="g_id_onload"
+           data-client_id="860458258411-922v35iverv84dui6bg3f9tk7gcu9hqg.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false"
+           data-cancel_on_tap_outside="false"
+           style="display: none;">
+      </div>
+    </div>
+    
+    <div class="divider">OR</div>
+    
+    <!-- Email/Password Login -->
+    <form id="emailLoginForm" action="/login" method="POST" onsubmit="showLoginLoading()">
+        {% if error %}
+        <div class="error-message" style="color: #e74c3c; background: #ffeaea; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <label for="email">Email:</label>
+        <input type="email" placeholder="you@example.com" id="email" name="email" required />
+        <label for="password">Password:</label>
+        <input type="password" placeholder="Password" id="password" name="password" required />
+        
+        <button type="submit" id="loginBtn">
+            <span id="loginBtnText">Login with Email</span>
+            <span id="loginBtnLoading" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" style="animation: spin 1s linear infinite; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"/>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                Logging in...
+            </span>
+        </button>
+    </form>
+
+    <div class="links">
+      <a href="/forgot">Forgot password?</a>
+      <a href="/sign-in">Need an account? Sign up</a>
+      <a href="/admin-login" style="color: #e74c3c;">🔐 Admin Panel</a>
+    </div>
+  </div>
+  
+  <!-- Google Sign-In Script -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <script>
+    // SIMPLE GOOGLE OAUTH - DIRECT REDIRECT (NO POPUP)
+    function initiateGoogleOAuth() {
+      console.log('🚀 Starting Google OAuth flow...');
+      
+      const clientId = '860458258411-922v35iverv84dui6bg3f9tk7gcu9hqg.apps.googleusercontent.com';
+      // Use root URL to match Google Cloud Console configuration
+      const redirectUri = window.location.origin;
+      const scope = 'email profile';
+      
+      // Build OAuth URL
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=token id_token&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `nonce=${Date.now()}&` +
+        `prompt=select_account`;
+      
+      console.log('🔗 Redirecting to Google Sign-In...');
+      console.log('Redirect URI:', redirectUri);
+      
+      // Direct redirect - no popup, works on all devices
+      window.location.href = authUrl;
+    }
+    
+    // Check if running on Live Server and show warning
+    window.onload = function() {
+      const currentURL = window.location.href;
+      const isLiveServer = currentURL.includes(':5500') || currentURL.includes(':3000') || currentURL.includes('file://');
+      const isFlaskApp = currentURL.includes(':5000'); // Accept any IP on port 5000
+      
+      // Detect mobile device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isNetworkAccess = !currentURL.includes('localhost') && !currentURL.includes('127.0.0.1');
+      
+      console.log('Current URL:', currentURL);
+      console.log('Is Live Server:', isLiveServer);
+      console.log('Is Flask App:', isFlaskApp);
+      console.log('Is Mobile:', isMobile);
+      console.log('Is Network Access:', isNetworkAccess);
+      
+      // Show mobile access info if accessing from mobile or network IP
+      if (isMobile || isNetworkAccess) {
+        document.getElementById('mobileAccessInfo').style.display = 'block';
+        document.getElementById('googleOAuthWarning').style.display = 'block';
+        console.log('📱 Mobile access detected - showing mobile info and Google OAuth warning');
+      }
+      
+      if (isLiveServer && !isFlaskApp) {
+        document.getElementById('liveServerWarning').style.display = 'block';
+        console.warn('⚠️ Running on Live Server - Google OAuth will not work');
+      }
+      
+      // Check if we're returning from Google OAuth (has hash fragment with id_token)
+      if (window.location.hash && window.location.hash.includes('id_token')) {
+        console.log('🔄 Detected Google OAuth callback - processing...');
+        handleGoogleCallback();
+      }
+    };
+    
+    // Handle Google OAuth callback on root URL
+    function handleGoogleCallback() {
+      try {
+        console.log('🔄 Processing Google OAuth callback...');
+        
+        // Parse the hash fragment to get the ID token
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const idToken = params.get('id_token');
+        
+        console.log('📦 Hash params:', hash);
+        console.log('🔑 ID Token:', idToken ? 'Found' : 'Not found');
+        
+        if (idToken) {
+          // Parse JWT token to get user info
+          const tokenParts = idToken.split('.');
+          const payload = JSON.parse(atob(tokenParts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          
+          console.log('✅ User data extracted:', payload);
+          
+          const email = payload.email;
+          const name = payload.name;
+          const picture = payload.picture;
+          
+          // Store in localStorage
+          localStorage.setItem('userEmail', email);
+          localStorage.setItem('userName', name);
+          localStorage.setItem('userPicture', picture || '');
+          
+          console.log('💾 Stored in localStorage');
+          
+          // Send to backend with credentials to ensure session cookies work
+          const formData = new FormData();
+          formData.append('email', email);
+          formData.append('name', name);
+          formData.append('google_id', 'oauth_' + Date.now());
+          
+          console.log('📤 Sending to backend...');
+          
+          fetch('/google-login', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'  // Ensure cookies are sent/received
+          })
+          .then(response => {
+            console.log('✅ Backend response:', response.status);
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Backend login failed');
+          })
+          .then(data => {
+            console.log('✅ Backend login successful:', data);
+            // Clear the hash to prevent re-processing
+            history.replaceState(null, null, ' ');
+            // Use replace instead of href to prevent back button issues
+            console.log('🎯 Redirecting to passes page...');
+            window.location.replace('/passes');
+          })
+          .catch(error => {
+            console.error('❌ Backend error:', error);
+            // Navigate anyway - user data is in localStorage
+            console.log('🎯 Redirecting to passes page anyway...');
+            history.replaceState(null, null, ' ');
+            window.location.replace('/passes');
+          });
+        } else {
+          console.error('❌ No ID token found in URL');
+        }
+      } catch (error) {
+        console.error('❌ Error processing Google callback:', error);
+      }
+    }
+
+    // BACKUP: Google One Tap callback (if it ever fires)
+    function handleCredentialResponse(response) {
+      try {
+        console.log('🔐 Google One Tap callback fired (backup method)');
+        const data = parseJwt(response.credential);
+        console.log('✅ Google login data:', data);
+        
+        // Store user data in localStorage
+        localStorage.setItem("userName", data.name);
+        localStorage.setItem("userEmail", data.email);
+        localStorage.setItem("userPicture", data.picture || "");
+        
+        console.log('✅ Sending to backend...');
+        
+        const formData = new FormData();
+        formData.append('email', data.email);
+        formData.append('name', data.name);
+        formData.append('google_id', data.sub || '');
+        
+        fetch('/google-login', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          console.log('✅ Backend response:', response.status);
+          window.location.href = '/passes';
+        })
+        .catch(error => {
+          console.error('❌ Error:', error);
+          window.location.href = '/passes';
+        });
+        
+      } catch (error) {
+        console.error('❌ Error processing Google login:', error);
+        alert('Login failed. Please try again or use email/password login.');
+      }
+    }
+
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (error) {
+        console.error('❌ Error parsing JWT token:', error);
+        throw error;
+      }
+    }
+
+    // Add form validation and loading states for email/password login
+    document.addEventListener('DOMContentLoaded', function() {
+      const emailLoginForm = document.getElementById('emailLoginForm');
+      if (emailLoginForm) {
+        emailLoginForm.addEventListener('submit', function(e) {
+          const email = document.getElementById('email').value.trim();
+          const password = document.getElementById('password').value;
+          
+          // Basic validation
+          if (!email || !password) {
+            e.preventDefault();
+            alert('Please enter both email and password');
+            return;
+          }
+          
+          // Show loading state
+          showLoginLoading();
+        });
+      }
+    });
+    
+    function showLoginLoading() {
+      const loginBtn = document.getElementById('loginBtn');
+      const loginBtnText = document.getElementById('loginBtnText');
+      const loginBtnLoading = document.getElementById('loginBtnLoading');
+      
+      if (loginBtn && loginBtnText && loginBtnLoading) {
+        loginBtn.disabled = true;
+        loginBtn.style.opacity = '0.7';
+        loginBtnText.style.display = 'none';
+        loginBtnLoading.style.display = 'inline-flex';
+        loginBtnLoading.style.alignItems = 'center';
+        
+        console.log('🔄 Login form submitted - showing loading state');
+        
+        // Auto-hide loading after 10 seconds (in case of server issues)
+        setTimeout(function() {
+          hideLoginLoading();
+        }, 10000);
+      }
+    }
+    
+    function hideLoginLoading() {
+      const loginBtn = document.getElementById('loginBtn');
+      const loginBtnText = document.getElementById('loginBtnText');
+      const loginBtnLoading = document.getElementById('loginBtnLoading');
+      
+      if (loginBtn && loginBtnText && loginBtnLoading) {
+        loginBtn.disabled = false;
+        loginBtn.style.opacity = '1';
+        loginBtnText.style.display = 'inline';
+        loginBtnLoading.style.display = 'none';
+      }
+    }
+    
+    // Add CSS for spinning animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      #loginBtn:disabled {
+        cursor: not-allowed;
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+  
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

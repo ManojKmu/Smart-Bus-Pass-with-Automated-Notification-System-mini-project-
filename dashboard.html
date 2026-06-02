@@ -1,0 +1,3659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Bus Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      overflow-x: hidden;
+    }
+
+    /* Ensure no browser default margins */
+    html {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      width: 100vw;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    /* Fixed Sidebar */
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      left: 0 !important;
+      top: 0 !important;
+      z-index: 1000;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      margin: 0 !important;
+      padding: 0;
+      border: none;
+      outline: none;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .sidebar-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 20px 0;
+      margin: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 15px 25px;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+      cursor: pointer;
+      margin: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.1);
+      border-left-color: #4CAF50;
+      transform: translateX(5px);
+    }
+
+    .nav-item.active {
+      background: rgba(255,255,255,0.2);
+      border-left-color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .nav-item i {
+      margin-right: 12px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .user-details h4 {
+      margin: 0;
+      font-size: 0.9em;
+    }
+
+    .user-details p {
+      margin: 0;
+      font-size: 0.8em;
+      opacity: 0.8;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      padding: 30px;
+      background: #f5f7fa;
+      min-height: 100vh;
+      overflow-y: auto;
+      width: calc(100vw - 280px);
+      max-width: calc(100vw - 280px);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .content-section {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .section-title {
+      font-size: 2.5em;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .section-subtitle {
+      color: #7f8c8d;
+      font-size: 1.1em;
+    }
+
+    /* Home Section Styles */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      border-left: 4px solid #4CAF50;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .stat-value {
+      font-size: 2em;
+      font-weight: bold;
+      color: #4CAF50;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .action-btn {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 20px;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .action-btn.secondary {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+    }
+
+    .action-btn.secondary:hover {
+      box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 250px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100vw;
+        max-width: 100vw;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    }
+
+    .mobile-menu-btn {
+      display: none;
+    }
+
+    /* Pass Selection Styles */
+    .pass-selection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 100%;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .pass-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      border: 2px solid #e1e5e9;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .pass-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      border-color: #4CAF50;
+    }
+
+    .pass-card.popular {
+      border-color: #ff9800;
+      background: linear-gradient(135deg, #fff8e1, #ffffff);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      background: #ff9800;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .pass-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .pass-header h3 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+      font-size: 1.4em;
+    }
+
+    .pass-price {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+
+    .pass-details {
+      margin-bottom: 20px;
+    }
+
+    .pass-details p {
+      margin: 8px 0;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pass-details .savings {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .pass-select-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pass-select-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+    }
+
+    /* Profile Styles */
+    .profile-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .profile-card {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      color: white;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      font-weight: bold;
+      border: 3px solid rgba(255,255,255,0.3);
+    }
+
+    .profile-info h3 {
+      margin: 0 0 5px 0;
+      color: white;
+      font-size: 1.5em;
+    }
+
+    .profile-info p {
+      margin: 0;
+      color: rgba(255,255,255,0.8);
+      font-size: 1.1em;
+    }
+
+    .profile-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      color: white;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group label i {
+      width: 20px;
+      text-align: center;
+    }
+
+    .required {
+      color: #ff4444;
+      font-weight: bold;
+      margin-left: 3px;
+    }
+
+    .form-input {
+      padding: 12px 15px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      font-size: 1em;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #fff;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    }
+
+    .form-input.disabled {
+      background: rgba(255,255,255,0.6);
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .profile-actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .edit-btn, .save-btn, .cancel-btn {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 25px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .edit-btn {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+      color: white;
+    }
+
+    .edit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+    }
+
+    .save-btn {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+    }
+
+    .save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+    }
+
+    .cancel-btn {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+      color: white;
+    }
+
+    .cancel-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
+    }
+
+    .form-input.disabled {
+      background: rgba(255,255,255,0.6);
+      color: #666;
+      cursor: not-allowed;
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .form-input.enabled {
+      background: rgba(255,255,255,0.95);
+      color: #333;
+      cursor: text;
+      border-color: rgba(255,255,255,0.8);
+    }
+
+    .form-input.enabled:focus {
+      background: #fff;
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+
+
+    @media (max-width: 768px) {
+      .profile-container {
+        max-width: 100%;
+      }
+      
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      
+      .profile-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5em;
+      }
+      
+      .pass-selection-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="dashboard-container">
+    <!-- Fixed Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="{{ url_for('static', filename='Smartbus_logo_(1).jpg') }}" alt="Smart Bus Logo" class="sidebar-logo">
+        <h3 class="sidebar-title">Smart Bus</h3>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" onclick="showSection('home')">
+          <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('buy-pass')">
+          <i class="fas fa-shopping-cart"></i> Buy Pass
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('my-passes')">
+          <i class="fas fa-ticket-alt"></i> My Passes
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('tsrtc-tickets')">
+          <i class="fas fa-bus"></i> TSRTC Tickets
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('notifications')">
+          <i class="fas fa-bell"></i> Notifications
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('profile')">
+          <i class="fas fa-user"></i> Profile
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-details">
+            <h4 id="userName">Loading...</h4>
+            <p id="userEmail">Loading...</p>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- Home Section -->
+      <div id="home" class="content-section active">
+        <div class="section-header">
+          <h1 class="section-title">Dashboard</h1>
+          <p class="section-subtitle">Welcome back! Manage your bus passes and travel seamlessly.</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div id="statsGrid" class="stats-grid" style="display: none;">
+          <div class="stat-card">
+            <div class="stat-value" id="activePasses">0</div>
+            <div class="stat-label">Active Passes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalSpent">₹0</div>
+            <div class="stat-label">Total Spent</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalSavings">₹0</div>
+            <div class="stat-label">Total Savings</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="expiringCount">0</div>
+            <div class="stat-label">Expiring Soon</div>
+          </div>
+        </div>
+
+        <!-- First Time User Message -->
+        <div id="firstTimeMessage" class="first-time-message">
+          <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 30px; border-radius: 15px; text-align: center;">
+            <h3 style="color: #1976d2; margin: 0 0 15px 0;">🎉 Welcome to Smart Bus!</h3>
+            <p style="color: #1565c0; margin: 0 0 20px 0;">Purchase your first pass to start tracking your travel statistics and savings.</p>
+          </div>
+        </div>
+
+        <!-- My Passes Quick View on Home -->
+        <div id="homePassesSection" style="display: none; margin-bottom: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #333; margin: 0; font-size: 1.5em;">
+              <i class="fas fa-ticket-alt" style="color: #4CAF50; margin-right: 10px;"></i>
+              My Active Passes
+            </h2>
+            <a href="#" onclick="showSection('my-passes'); return false;" style="color: #4CAF50; text-decoration: none; font-weight: 500;">
+              View All <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div id="homePassesGrid" class="passes-receipt-view">
+            <!-- Passes will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <a href="#" class="action-btn" onclick="showSection('buy-pass')">
+            <i class="fas fa-plus"></i> Buy New Pass
+          </a>
+          <a href="#" class="action-btn secondary" onclick="showSection('my-passes')">
+            <i class="fas fa-ticket-alt"></i> View My Passes
+          </a>
+        </div>
+      </div>
+
+      <!-- Buy Pass Section -->
+      <div id="buy-pass" class="content-section">
+        <div class="section-header">
+          <h1 class="section-title">Buy Pass</h1>
+          <p class="section-subtitle">Choose the perfect pass for your travel needs</p>
+        </div>
+
+        <div class="pass-selection-grid">
+          <div class="pass-card" onclick="selectPass('Daily Pass', '₹75', 1)">
+            <div class="pass-header">
+              <h3>Daily Pass</h3>
+              <div class="pass-price">₹75</div>
+            </div>
+            <div class="pass-details">
+              <p><i class="fas fa-calendar-day"></i> Valid for 1 day</p>
+              <p><i class="fas fa-route"></i> All city routes</p>
+              <p><i class="fas fa-bus"></i> Unlimited rides</p>
+              <p class="savings">Pay as you go</p>
+            </div>
+            <button class="pass-select-btn" onclick="event.stopPropagation(); selectPass('Daily Pass', '₹75', 1);">Select Daily Pass</button>
+          </div>
+
+          <div class="pass-card" onclick="selectPass('Weekly Pass', '₹300', 7)">
+            <div class="pass-header">
+              <h3>Weekly Pass</h3>
+              <div class="pass-price">₹300</div>
+            </div>
+            <div class="pass-details">
+              <p><i class="fas fa-calendar-week"></i> Valid for 7 days</p>
+              <p><i class="fas fa-route"></i> All city routes</p>
+              <p><i class="fas fa-bus"></i> Unlimited rides</p>
+              <p class="savings">Save vs Daily Tickets</p>
+            </div>
+            <button class="pass-select-btn" onclick="event.stopPropagation(); selectPass('Weekly Pass', '₹300', 7);">Select Weekly Pass</button>
+          </div>
+
+          <div class="pass-card popular" onclick="selectPass('Monthly Pass', '₹1000', 30)">
+            <div class="popular-badge">Most Popular</div>
+            <div class="pass-header">
+              <h3>Monthly Pass</h3>
+              <div class="pass-price">₹1,000</div>
+            </div>
+            <div class="pass-details">
+              <p><i class="fas fa-calendar-alt"></i> Valid for 30 days</p>
+              <p><i class="fas fa-route"></i> All city routes</p>
+              <p><i class="fas fa-bus"></i> Unlimited rides</p>
+              <p class="savings">Save 33% vs Daily</p>
+            </div>
+            <button class="pass-select-btn" onclick="event.stopPropagation(); selectPass('Monthly Pass', '₹1000', 30);">Select Monthly Pass</button>
+          </div>
+
+          <div class="pass-card" onclick="selectPass('Student Monthly Pass', '₹600', 30)">
+            <div class="pass-header">
+              <h3>Student Pass</h3>
+              <div class="pass-price">₹600</div>
+            </div>
+            <div class="pass-details">
+              <p><i class="fas fa-graduation-cap"></i> Student discount</p>
+              <p><i class="fas fa-calendar-alt"></i> Valid for 30 days</p>
+              <p><i class="fas fa-route"></i> All city routes</p>
+              <p class="savings">40% Student Discount</p>
+            </div>
+            <button class="pass-select-btn" onclick="event.stopPropagation(); selectPass('Student Monthly Pass', '₹600', 30);">Select Student Pass</button>
+          </div>
+
+          <div class="pass-card" onclick="selectPass('Quarterly Pass', '₹2700', 90)">
+            <div class="pass-header">
+              <h3>Quarterly Pass</h3>
+              <div class="pass-price">₹2,700</div>
+            </div>
+            <div class="pass-details">
+              <p><i class="fas fa-calendar"></i> Valid for 90 days</p>
+              <p><i class="fas fa-route"></i> All city routes</p>
+              <p><i class="fas fa-bus"></i> Unlimited rides</p>
+              <p class="savings">Save 40% vs Daily</p>
+            </div>
+            <button class="pass-select-btn" onclick="event.stopPropagation(); selectPass('Quarterly Pass', '₹2700', 90);">Select Quarterly Pass</button>
+          </div>
+
+          <div class="pass-card" onclick="selectPass('Annual Pass', '₹10000', 365)">
+            <div class="pass-header">
+              <h3>Annual Pass</h3>
+              <div class="pass-price">₹10,000</div>
+            </div>
+            <div class="pass-details">
+              <p><i class="fas fa-calendar"></i> Valid for 365 days</p>
+              <p><i class="fas fa-route"></i> All city routes</p>
+              <p><i class="fas fa-bus"></i> Unlimited rides</p>
+              <p class="savings">Save 45% vs Daily</p>
+            </div>
+            <button class="pass-select-btn" onclick="event.stopPropagation(); selectPass('Annual Pass', '₹10000', 365);">Select Annual Pass</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Passes Section -->
+      <div id="my-passes" class="content-section">
+        <div class="section-header">
+          <h1 class="section-title">My Passes</h1>
+          <p class="section-subtitle">View and manage your bus passes</p>
+        </div>
+
+        <div id="myPassesContent">
+          <div id="passesReceiptView" class="passes-receipt-view">
+            <!-- Pass receipts will be loaded here -->
+          </div>
+          <div id="noPassesInDashboard" class="no-passes-dashboard" style="display: none;">
+            <div style="text-align: center; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+              <i class="fas fa-ticket-alt" style="font-size: 3em; color: #ddd; margin-bottom: 15px;"></i>
+              <h3 style="color: #666;">No Passes Found</h3>
+              <p style="color: #888;">You haven't purchased any passes yet.</p>
+              <button class="action-btn" onclick="showSection('buy-pass')" style="margin-top: 15px;">
+                <i class="fas fa-plus"></i> Buy Your First Pass
+              </button>
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="/passes" class="action-btn secondary">
+              <i class="fas fa-external-link-alt"></i> Manage All Passes
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications Section -->
+      <div id="notifications" class="content-section">
+        <div class="section-header">
+          <h1 class="section-title">Notifications</h1>
+          <p class="section-subtitle">Stay updated with your pass status and alerts</p>
+        </div>
+
+        <div id="notificationsContent">
+          <div id="notificationsList" class="notifications-list">
+            <!-- Notifications will be loaded here -->
+          </div>
+          <div id="noNotifications" class="no-notifications" style="display: none;">
+            <div style="text-align: center; padding: 40px; color: #666;">
+              <i class="fas fa-bell-slash" style="font-size: 3em; margin-bottom: 15px;"></i>
+              <h3>No Notifications</h3>
+              <p>You're all caught up! No new notifications at this time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TSRTC Tickets Section -->
+      <div id="tsrtc-tickets" class="content-section">
+        <div class="section-header">
+          <h1 class="section-title">TSRTC Tickets</h1>
+          <p class="section-subtitle">View your TSRTC bus pass tickets</p>
+        </div>
+
+        <div id="tsrtcTicketsContent">
+          <div id="tsrtcTicketsGrid" class="passes-receipt-view">
+            <!-- TSRTC tickets will be loaded here -->
+          </div>
+          <div id="noTsrtcTickets" class="no-passes-dashboard" style="display: none;">
+            <div style="text-align: center; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+              <i class="fas fa-bus" style="font-size: 3em; color: #ddd; margin-bottom: 15px;"></i>
+              <h3 style="color: #666;">No TSRTC Tickets Found</h3>
+              <p style="color: #888;">You haven't purchased any passes yet.</p>
+              <button class="action-btn" onclick="showSection('buy-pass')" style="margin-top: 15px;">
+                <i class="fas fa-plus"></i> Buy Your First Pass
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Section -->
+      <div id="profile" class="content-section">
+        <div class="section-header">
+          <h1 class="section-title">My Profile</h1>
+          <p class="section-subtitle">Manage your account information</p>
+        </div>
+
+        <div class="profile-container">
+          <div class="profile-card">
+            <div class="profile-header">
+              <div class="profile-avatar" id="profileAvatar">?</div>
+              <div class="profile-info">
+                <h3 id="profileName">User</h3>
+                <p id="profileEmail">user@example.com</p>
+              </div>
+            </div>
+
+            <div class="profile-form">
+              <div class="form-group">
+                <label for="profileEmailField">
+                  <i class="fas fa-envelope"></i> Email
+                </label>
+                <input type="email" id="profileEmailField" class="form-input disabled" readonly>
+              </div>
+
+              <div class="form-group">
+                <label for="profileFullNameField">
+                  <i class="fas fa-user"></i> Full Name
+                </label>
+                <input type="text" id="profileFullNameField" class="form-input disabled" readonly>
+              </div>
+
+              <div class="form-group">
+                <label for="profilePhoneField">
+                  <i class="fas fa-phone"></i> Phone Number <span class="required">*</span>
+                </label>
+                <input type="tel" id="profilePhoneField" class="form-input disabled" placeholder="Enter your phone number" readonly required>
+              </div>
+
+              <div class="form-group">
+                <label for="profileCityField">
+                  <i class="fas fa-city"></i> City <span class="required">*</span>
+                </label>
+                <input type="text" id="profileCityField" class="form-input disabled" placeholder="Enter your city" readonly required>
+              </div>
+
+              <div class="form-group">
+                <label for="profileAddressField">
+                  <i class="fas fa-map-marker-alt"></i> Address <span class="required">*</span>
+                </label>
+                <textarea id="profileAddressField" class="form-input form-textarea disabled" rows="3" placeholder="Enter your address" readonly required></textarea>
+              </div>
+
+              <div class="profile-actions">
+                <button class="edit-btn" onclick="enableProfileEdit()" id="editProfileBtn">
+                  <i class="fas fa-edit"></i> Edit Profile
+                </button>
+                <button class="save-btn" onclick="saveProfileChanges()" id="saveProfileBtn" style="display: none;">
+                  <i class="fas fa-save"></i> Save Changes
+                </button>
+                <button class="cancel-btn" onclick="cancelProfileEdit()" id="cancelProfileBtn" style="display: none;">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .passes-quick-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .passes-receipt-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .pass-receipt-card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      border: 2px solid #e1e5e9;
+      transition: all 0.3s ease;
+    }
+
+    .pass-receipt-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      border-color: #4CAF50;
+    }
+
+    .pass-receipt-card.active {
+      border-color: #4CAF50;
+    }
+
+    .pass-receipt-card.expiring {
+      border-color: #ff9800;
+      background: #fff8e1;
+    }
+
+    .pass-receipt-card.expired {
+      border-color: #f44336;
+      background: #ffebee;
+    }
+
+    .receipt-header {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .receipt-header.expiring {
+      background: linear-gradient(135deg, #ff9800, #f57c00);
+    }
+
+    .receipt-header.expired {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+    }
+
+    .receipt-logo {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px;
+      font-size: 1.5em;
+    }
+
+    .receipt-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 0 0 5px 0;
+    }
+
+    .receipt-number {
+      font-size: 0.9em;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    .receipt-status {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(255,255,255,0.2);
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .receipt-body {
+      padding: 25px;
+    }
+
+    .receipt-details {
+      margin-bottom: 20px;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dotted #ddd;
+    }
+
+    .receipt-row:last-child {
+      border-bottom: none;
+    }
+
+    .receipt-label {
+      font-weight: 500;
+      color: #555;
+    }
+
+    .receipt-value {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .receipt-total {
+      background: #f8fff8;
+      margin: 15px -25px -25px;
+      padding: 20px 25px;
+      border-top: 2px solid #4CAF50;
+    }
+
+    .receipt-total .receipt-row {
+      border-bottom: none;
+      font-size: 1.1em;
+      color: #4CAF50;
+    }
+
+    .receipt-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .receipt-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .receipt-btn-primary {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .receipt-btn-secondary {
+      background: #2196F3;
+      color: white;
+    }
+
+    .receipt-btn-warning {
+      background: #ff9800;
+      color: white;
+    }
+
+    .receipt-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+
+    .expiry-alert {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .pass-quick-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-left: 4px solid #4CAF50;
+    }
+
+    .pass-quick-card.expiring {
+      border-left-color: #ff9800;
+      background: #fff8e1;
+    }
+
+    .pass-quick-card.expired {
+      border-left-color: #f44336;
+      background: #ffebee;
+    }
+
+    .notifications-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .notification-item {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-left: 4px solid #4CAF50;
+      position: relative;
+    }
+
+    .notification-item.unread {
+      background: #f8fff8;
+      border-left-color: #2196F3;
+    }
+
+    .notification-item.warning {
+      border-left-color: #ff9800;
+      background: #fff8e1;
+    }
+
+    .notification-item.error {
+      border-left-color: #f44336;
+      background: #ffebee;
+    }
+
+    .notification-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .notification-title {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .notification-message {
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .mark-read-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 12px;
+    }
+  </style>
+
+  <script>
+    function showSection(id) {
+      // Hide all content sections
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Show the selected section
+      const targetSection = document.getElementById(id);
+      if (targetSection) {
+        targetSection.classList.add('active');
+      }
+      
+      // Update navigation active state
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Find and activate the corresponding nav item
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(id)) {
+          item.classList.add('active');
+        }
+      });
+      
+      // Load content based on section - ALWAYS refresh to show latest data
+      if (id === 'my-passes') {
+        console.log('📋 Loading My Passes section - refreshing pass data...');
+        // Reload passes from backend first, then display
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          loadPassesFromBackend(userEmail);
+        } else {
+          loadPassesQuickView(); // Fallback to localStorage
+        }
+      } else if (id === 'tsrtc-tickets') {
+        console.log('🚌 Loading TSRTC Tickets section - refreshing ticket data...');
+        // Load TSRTC tickets
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          loadTSRTCTickets(userEmail);
+        } else {
+          loadTSRTCTickets(); // Fallback to localStorage
+        }
+      } else if (id === 'notifications') {
+        console.log('🔔 Loading Notifications section - refreshing notifications...');
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          loadNotifications(userEmail);
+        } else {
+          loadNotifications(); // Fallback to localStorage-based notifications
+        }
+        
+        // Mark all notifications as read when opening notifications section
+        setTimeout(() => {
+          markAllNotificationsAsRead();
+        }, 500); // Small delay to let notifications load first
+      } else if (id === 'home') {
+        console.log('🏠 Loading Home section - refreshing statistics...');
+        checkUserPasses(); // Refresh statistics on home page
+      }
+    }
+
+    // Mark all notifications as read
+    function markAllNotificationsAsRead() {
+      const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      let hasUnread = false;
+      
+      // Check if there are any unread notifications
+      notifications.forEach(notif => {
+        if (!notif.read) {
+          hasUnread = true;
+          notif.read = true;
+        }
+      });
+      
+      if (hasUnread) {
+        // Save updated notifications
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        
+        // Update badge to 0 (which will remove it)
+        updateNotificationBadge(0);
+        
+        console.log('✅ All notifications marked as read');
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    function enablePassSelectionButtons() {
+      // Ensure all pass selection buttons are ready and clickable
+      const passCards = document.querySelectorAll('.pass-card');
+      const passButtons = document.querySelectorAll('.pass-select-btn');
+      
+      passCards.forEach(card => {
+        card.style.pointerEvents = 'auto';
+        card.style.opacity = '1';
+        card.style.cursor = 'pointer';
+      });
+      
+      passButtons.forEach(button => {
+        button.style.pointerEvents = 'auto';
+        button.disabled = false;
+      });
+      
+      console.log('✅ Pass selection enabled for', passCards.length, 'pass cards and', passButtons.length, 'buttons');
+      
+      // Also ensure user data is available for pass selection
+      const userName = localStorage.getItem("userName");
+      const userEmail = localStorage.getItem("userEmail");
+      
+      if (!userName || !userEmail) {
+        console.log('⚠️ User data missing, refreshing from DOM...');
+        const nameFromDOM = document.getElementById("userName")?.textContent;
+        const emailFromDOM = document.getElementById("userEmail")?.textContent;
+        
+        if (nameFromDOM && emailFromDOM && nameFromDOM !== 'Loading...' && emailFromDOM !== 'Loading...') {
+          localStorage.setItem("userName", nameFromDOM);
+          localStorage.setItem("userEmail", emailFromDOM);
+          console.log('✅ User data refreshed from DOM');
+        }
+      }
+    }
+
+    function selectPass(passType, price, duration) {
+      console.log('🎫 DASHBOARD: Pass selected:', passType, price);
+      
+      // Clear any existing data first to avoid conflicts
+      localStorage.removeItem('selectedPass');
+      localStorage.removeItem('selectedPrice');
+      localStorage.removeItem('selectedDuration');
+      sessionStorage.removeItem('selectedPass');
+      sessionStorage.removeItem('selectedPrice');
+      sessionStorage.removeItem('selectedDuration');
+      
+      // Store selected pass data with multiple methods for reliability
+      localStorage.setItem('selectedPass', passType);
+      localStorage.setItem('selectedPrice', price);
+      localStorage.setItem('selectedDuration', duration);
+      
+      // Also store in sessionStorage as backup
+      sessionStorage.setItem('selectedPass', passType);
+      sessionStorage.setItem('selectedPrice', price);
+      sessionStorage.setItem('selectedDuration', duration);
+      
+      // Ensure user session data is preserved
+      const userName = document.getElementById('userName').textContent;
+      const userEmail = document.getElementById('userEmail').textContent;
+      if (userName && userEmail && userName !== 'Loading...' && userEmail !== 'Loading...') {
+        localStorage.setItem('userName', userName);
+        localStorage.setItem('userEmail', userEmail);
+        sessionStorage.setItem('userName', userName);
+        sessionStorage.setItem('userEmail', userEmail);
+      }
+      
+      // Immediate verification to ensure data was stored
+      const verification = {
+        localStorage: {
+          pass: localStorage.getItem('selectedPass'),
+          price: localStorage.getItem('selectedPrice')
+        },
+        sessionStorage: {
+          pass: sessionStorage.getItem('selectedPass'),
+          price: sessionStorage.getItem('selectedPrice')
+        }
+      };
+      
+      console.log('🎫 DASHBOARD: Storage verification:', verification);
+      
+      // Only proceed if data was stored successfully
+      if (verification.localStorage.pass === passType && verification.localStorage.price === price) {
+        console.log('✅ DASHBOARD: Data stored successfully, proceeding to route page');
+        
+        // Navigate to clean route URL without parameters
+        window.location.href = '/route';
+      } else {
+        console.error('❌ DASHBOARD: Data storage failed, retrying...');
+        
+        // Retry storage once more
+        setTimeout(() => {
+          localStorage.setItem('selectedPass', passType);
+          localStorage.setItem('selectedPrice', price);
+          localStorage.setItem('selectedDuration', duration);
+          
+          // Navigate after retry to clean URL
+          window.location.href = '/route';
+        }, 100);
+      }
+    }
+
+    function loadPassesQuickView() {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const passesContainer = document.getElementById('passesReceiptView');
+      const noPassesMessage = document.getElementById('noPassesInDashboard');
+      
+      if (userPasses.length === 0) {
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          fetch(`/get-user-passes/${encodeURIComponent(userEmail)}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && data.passes.length > 0) {
+                localStorage.setItem('userPasses', JSON.stringify(data.passes));
+                loadPassesQuickView(); // Recursive call once data is in localStorage
+              } else {
+                passesContainer.style.display = 'none';
+                noPassesMessage.style.display = 'block';
+              }
+            })
+            .catch(() => {
+              passesContainer.style.display = 'none';
+              noPassesMessage.style.display = 'block';
+            });
+        } else {
+          passesContainer.style.display = 'none';
+          noPassesMessage.style.display = 'block';
+        }
+        return;
+      }
+
+      passesContainer.style.display = 'grid';
+      noPassesMessage.style.display = 'none';
+      passesContainer.innerHTML = '';
+      
+      userPasses.forEach(pass => {
+        const now = new Date();
+        const expiryDate = new Date(pass.expiryDate);
+        const purchaseDate = new Date(pass.purchaseDate);
+        const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+        
+        let cardClass = 'active';
+        let headerClass = '';
+        let statusText = 'Active';
+        
+        if (daysUntilExpiry < 0) {
+          cardClass = 'expired';
+          headerClass = 'expired';
+          statusText = 'Expired';
+        } else if (daysUntilExpiry <= 7) {
+          cardClass = 'expiring';
+          headerClass = 'expiring';
+          statusText = `Expires in ${daysUntilExpiry} days`;
+        }
+
+        const receiptCard = document.createElement('div');
+        receiptCard.className = `pass-receipt-card ${cardClass}`;
+        receiptCard.innerHTML = `
+          <div class="receipt-header ${headerClass}">
+            <div class="receipt-status">${statusText}</div>
+            <div class="receipt-logo">
+              <i class="fas fa-bus"></i>
+            </div>
+            <h3 class="receipt-title">Smart Bus Pass Receipt</h3>
+            <p class="receipt-number">Receipt #SB${pass.id}</p>
+          </div>
+          
+          <div class="receipt-body">
+            ${daysUntilExpiry <= 7 && daysUntilExpiry > 0 ? `
+              <div class="expiry-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Your pass expires in ${daysUntilExpiry} day(s). Renew now!</span>
+              </div>
+            ` : ''}
+            
+            <div class="receipt-details">
+              <div class="receipt-row">
+                <span class="receipt-label">Pass Type:</span>
+                <span class="receipt-value">${pass.type}</span>
+              </div>
+              <div class="receipt-row">
+                <span class="receipt-label">Route:</span>
+                <span class="receipt-value">${pass.route || 'All City Routes'}</span>
+              </div>
+              <div class="receipt-row">
+                <span class="receipt-label">Purchase Date:</span>
+                <span class="receipt-value">${purchaseDate.toLocaleDateString()}</span>
+              </div>
+              <div class="receipt-row">
+                <span class="receipt-label">Valid From:</span>
+                <span class="receipt-value">${purchaseDate.toLocaleDateString()}</span>
+              </div>
+              <div class="receipt-row">
+                <span class="receipt-label">Valid Until:</span>
+                <span class="receipt-value">${expiryDate.toLocaleDateString()}</span>
+              </div>
+              ${pass.routeDistance ? `
+                <div class="receipt-row">
+                  <span class="receipt-label">Distance:</span>
+                  <span class="receipt-value">${pass.routeDistance} km</span>
+                </div>
+              ` : ''}
+              ${pass.paymentMethod ? `
+                <div class="receipt-row">
+                  <span class="receipt-label">Payment Method:</span>
+                  <span class="receipt-value">${pass.paymentMethod}</span>
+                </div>
+              ` : ''}
+              <div class="receipt-row">
+                <span class="receipt-label">Status:</span>
+                <span class="receipt-value">${pass.status}</span>
+              </div>
+            </div>
+            
+            <div class="receipt-total">
+              <div class="receipt-row">
+                <span class="receipt-label"><strong>Total Amount Paid:</strong></span>
+                <span class="receipt-value"><strong>${pass.price}</strong></span>
+              </div>
+            </div>
+            
+            <div class="receipt-actions">
+              <button class="receipt-btn receipt-btn-primary" onclick="downloadPassReceipt('${pass.id}')">
+                <i class="fas fa-download"></i> Download
+              </button>
+              <button class="receipt-btn receipt-btn-secondary" onclick="sharePassReceipt('${pass.id}')">
+                <i class="fas fa-share"></i> Share
+              </button>
+              <button class="receipt-btn" onclick="viewTSRTCTicketFull('${pass.id}')" style="background: #e91e63; color: white;">
+                <i class="fas fa-bus"></i> View TSRTC Ticket
+              </button>
+              ${daysUntilExpiry <= 7 ? `
+                <button class="receipt-btn receipt-btn-warning" onclick="renewPassFromDashboard('${pass.id}')">
+                  <i class="fas fa-refresh"></i> Renew
+                </button>
+              ` : ''}
+            </div>
+            
+            <div style="text-align: center; margin-top: 15px; font-size: 12px; color: #666;">
+              <p>Thank you for choosing Smart Bus!</p>
+              <p>Customer Support: support@smartbus.com | Phone: 1-800-SMARTBUS</p>
+            </div>
+          </div>
+        `;
+        
+        passesContainer.appendChild(receiptCard);
+      });
+    }
+
+    function downloadPassReceipt(passId) {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const pass = userPasses.find(p => p.id == passId);
+      
+      if (!pass) return;
+
+      // Create a printable receipt
+      const receiptContent = `
+        SMART BUS PASS RECEIPT
+        =====================
+        
+        Receipt No: SB${pass.id}
+        Pass Type: ${pass.type}
+        Route: ${pass.route || 'All City Routes'}
+        
+        Purchase Details:
+        - Purchase Date: ${new Date(pass.purchaseDate).toLocaleDateString()}
+        - Valid From: ${new Date(pass.purchaseDate).toLocaleDateString()}
+        - Valid Until: ${new Date(pass.expiryDate).toLocaleDateString()}
+        ${pass.routeDistance ? `- Distance: ${pass.routeDistance} km` : ''}
+        ${pass.paymentMethod ? `- Payment Method: ${pass.paymentMethod}` : ''}
+        - Status: ${pass.status}
+        
+        Amount Paid: ${pass.price}
+        
+        Thank you for choosing Smart Bus!
+        Customer Support: support@smartbus.com
+        Phone: 1-800-SMARTBUS
+        
+        This is a computer-generated receipt.
+      `;
+
+      const dataBlob = new Blob([receiptContent], {type: 'text/plain'});
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `SmartBus_Receipt_SB${pass.id}.txt`;
+      link.click();
+      
+      URL.revokeObjectURL(url);
+    }
+
+    function sharePassReceipt(passId) {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const pass = userPasses.find(p => p.id == passId);
+      
+      if (!pass) return;
+
+      const receiptText = `🎫 *Smart Bus Pass Receipt*
+
+📋 Receipt #SB${pass.id}
+
+*Pass Details:*
+• Type: ${pass.type}
+• Route: ${pass.route || 'All City Routes'}
+• Valid Until: ${new Date(pass.expiryDate).toLocaleDateString()}
+• Amount: ${pass.price}
+
+Thank you for choosing Smart Bus! 🚌`;
+
+      // Show share options modal
+      showShareModal(receiptText, pass);
+    }
+
+    function showShareModal(text, pass) {
+      // Create modal
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+      
+      modal.innerHTML = `
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 15px;
+          max-width: 400px;
+          width: 90%;
+          text-align: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+          <h3 style="color: #333; margin-bottom: 20px;">
+            <i class="fas fa-share-alt"></i> Share Receipt
+          </h3>
+          <p style="color: #666; margin-bottom: 25px;">Choose how you want to share your pass receipt</p>
+          
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+            <button onclick="shareViaWhatsApp('${encodeURIComponent(text)}')" style="
+              background: #25D366;
+              color: white;
+              border: none;
+              padding: 15px;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: bold;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+              <i class="fab fa-whatsapp" style="font-size: 24px; display: block; margin-bottom: 5px;"></i>
+              WhatsApp
+            </button>
+            
+            <button onclick="shareViaEmail('${pass.id}')" style="
+              background: #EA4335;
+              color: white;
+              border: none;
+              padding: 15px;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: bold;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+              <i class="fas fa-envelope" style="font-size: 24px; display: block; margin-bottom: 5px;"></i>
+              Email
+            </button>
+            
+            <button onclick="shareViaSMS('${encodeURIComponent(text)}')" style="
+              background: #0088cc;
+              color: white;
+              border: none;
+              padding: 15px;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: bold;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+              <i class="fas fa-sms" style="font-size: 24px; display: block; margin-bottom: 5px;"></i>
+              SMS
+            </button>
+            
+            <button onclick="copyToClipboard('${encodeURIComponent(text)}')" style="
+              background: #7c4dff;
+              color: white;
+              border: none;
+              padding: 15px;
+              border-radius: 10px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: bold;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+              <i class="fas fa-copy" style="font-size: 24px; display: block; margin-bottom: 5px;"></i>
+              Copy
+            </button>
+          </div>
+          
+          <button onclick="this.closest('div').parentElement.remove()" style="
+            background: #ccc;
+            color: #333;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+          ">
+            Cancel
+          </button>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Close on background click
+      modal.onclick = function(e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      };
+    }
+
+    function shareViaWhatsApp(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      
+      // Detect if mobile device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Open WhatsApp app directly on mobile
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(text)}`;
+      } else {
+        // Open WhatsApp Web on desktop
+        window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      }
+      
+      // Close modal
+      document.querySelector('div[style*="position: fixed"]').remove();
+      
+      // Show confirmation
+      showNotification('✅ Opening WhatsApp...', 'success');
+    }
+
+    function shareViaEmail(passId) {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const pass = userPasses.find(p => p.id == passId);
+      
+      if (!pass) return;
+      
+      const subject = `Smart Bus Pass Receipt - ${pass.type}`;
+      const body = `Smart Bus Pass Receipt
+
+Receipt Number: SB${pass.id}
+
+Pass Details:
+- Type: ${pass.type}
+- Route: ${pass.route || 'All City Routes'}
+- Valid Until: ${new Date(pass.expiryDate).toLocaleDateString()}
+- Amount: ${pass.price}
+
+Thank you for choosing Smart Bus!
+
+Visit: http://localhost:5000/dashboard`;
+      
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      
+      // Close modal
+      document.querySelector('div[style*="position: fixed"]').remove();
+      
+      showNotification('✅ Opening email client...', 'success');
+    }
+
+    function shareViaSMS(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      
+      // Detect if mobile device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Open SMS app on mobile
+        window.location.href = `sms:?body=${encodeURIComponent(text)}`;
+      } else {
+        // Show message on desktop
+        showNotification('📱 SMS sharing is only available on mobile devices', 'info');
+      }
+      
+      // Close modal
+      const modal = document.querySelector('div[style*="position: fixed"]');
+      if (modal) modal.remove();
+    }
+
+    function copyToClipboard(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      
+      navigator.clipboard.writeText(text).then(() => {
+        showNotification('✅ Receipt copied to clipboard!', 'success');
+        
+        // Close modal
+        const modal = document.querySelector('div[style*="position: fixed"]');
+        if (modal) modal.remove();
+      }).catch(err => {
+        showNotification('❌ Failed to copy to clipboard', 'error');
+      });
+    }
+
+    function renewPassFromDashboard(passId) {
+      // Redirect to renew pass OTP page for renewal
+      localStorage.setItem('renewPassId', passId);
+      window.location.href = '/renew-pass?passId=' + passId;
+    }
+
+    function loadNotifications() {
+      const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      const notificationsList = document.getElementById('notificationsList');
+      const noNotifications = document.getElementById('noNotifications');
+      
+      if (notifications.length === 0) {
+        notificationsList.style.display = 'none';
+        noNotifications.style.display = 'block';
+        return;
+      }
+
+      notificationsList.style.display = 'block';
+      noNotifications.style.display = 'none';
+      notificationsList.innerHTML = '';
+      
+      notifications.forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.className = `notification-item ${!notification.read ? 'unread' : ''} ${notification.type === 'expiry' ? 'warning' : ''}`;
+        notificationItem.innerHTML = `
+          ${!notification.read ? `<button class="mark-read-btn" onclick="markAsRead(${notification.id})">Mark as read</button>` : ''}
+          <div class="notification-header">
+            <div class="notification-title">${notification.title}</div>
+            <div class="notification-time">${new Date(notification.date).toLocaleDateString()}</div>
+          </div>
+          <div class="notification-message">${notification.message}</div>
+        `;
+        
+        notificationsList.appendChild(notificationItem);
+      });
+    }
+
+    function markAsRead(notificationId) {
+      const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      const notification = notifications.find(n => n.id === notificationId);
+      
+      if (notification) {
+        notification.read = true;
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+        loadNotifications(); // Refresh the display
+      }
+    }
+
+    // Load TSRTC Tickets
+    function loadTSRTCTickets(email) {
+      const userEmail = email || localStorage.getItem('userEmail');
+      
+      if (!userEmail) {
+        console.log('⚠️ No email found for TSRTC tickets');
+        showNoTSRTCTickets();
+        return;
+      }
+
+      console.log('🚌 Loading TSRTC tickets for:', userEmail);
+
+      // First try to load from localStorage (faster)
+      const localPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      
+      if (localPasses.length > 0) {
+        console.log(`✅ Loaded ${localPasses.length} TSRTC tickets from localStorage`);
+        displayTSRTCTickets(localPasses);
+        return;
+      }
+
+      // If no local passes, fetch from backend
+      fetch(`/get-user-passes/${encodeURIComponent(userEmail)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.passes.length > 0) {
+            console.log(`✅ Loaded ${data.passes.length} TSRTC tickets from backend`);
+            // Store in localStorage for future use
+            localStorage.setItem('userPasses', JSON.stringify(data.passes));
+            displayTSRTCTickets(data.passes);
+          } else {
+            console.log('ℹ️ No TSRTC tickets found');
+            showNoTSRTCTickets();
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error loading TSRTC tickets:', error);
+          showNoTSRTCTickets();
+        });
+    }
+
+    function displayTSRTCTickets(passes) {
+      const container = document.getElementById('tsrtcTicketsGrid');
+      const noTicketsMsg = document.getElementById('noTsrtcTickets');
+      
+      container.innerHTML = '';
+      container.style.display = 'grid';
+      noTicketsMsg.style.display = 'none';
+
+      // Get user data from localStorage
+      const userName = localStorage.getItem('userName') || 'Passenger';
+      const userEmail = localStorage.getItem('userEmail') || '';
+
+      passes.forEach(pass => {
+        const ticket = createTSRTCTicketCard(pass, userName, userEmail);
+        container.appendChild(ticket);
+      });
+    }
+
+    function createTSRTCTicketCard(pass, userName, userEmail) {
+      const now = new Date();
+      const expiryDate = new Date(pass.expiryDate);
+      const purchaseDate = new Date(pass.purchaseDate);
+      const daysRemaining = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+      
+      let validityClass = 'active';
+      let validityText = 'VALID';
+      let validityBadgeClass = 'active';
+      
+      if (daysRemaining < 0) {
+        validityClass = 'expired';
+        validityText = 'EXPIRED';
+        validityBadgeClass = 'expired';
+      } else if (daysRemaining <= 7) {
+        validityClass = 'expiring';
+        validityText = `EXPIRES IN ${daysRemaining} DAYS`;
+        validityBadgeClass = 'expiring';
+      }
+
+      // Extract route information
+      const routeParts = pass.route ? pass.route.split('→') : ['', ''];
+      const pickup = routeParts[0]?.trim() || 'Any Location';
+      const dropoff = routeParts[1]?.trim() || 'Any Location';
+
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        position: relative;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+      `;
+      
+      card.onmouseenter = function() {
+        this.style.transform = 'translateY(-5px)';
+        this.style.boxShadow = '0 20px 50px rgba(0,0,0,0.4)';
+      };
+      
+      card.onmouseleave = function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 15px 40px rgba(0,0,0,0.3)';
+      };
+      
+      card.innerHTML = `
+        <!-- Ticket Holes -->
+        <div style="position: absolute; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
+          <div style="position: absolute; width: 30px; height: 30px; background: #f5f7fa; border-radius: 50%; top: 50%; left: -15px; transform: translateY(-50%); border: 2px solid #ccc;"></div>
+          <div style="position: absolute; width: 30px; height: 30px; background: #f5f7fa; border-radius: 50%; top: 50%; right: -15px; transform: translateY(-50%); border: 2px solid #ccc;"></div>
+        </div>
+        
+        <!-- Ticket Header - Pink/Green Pattern like TSRTC -->
+        <div style="background: linear-gradient(135deg, #ffc0cb 0%, #ffb6c1 50%, #98fb98 50%, #90ee90 100%); padding: 20px; position: relative; border-bottom: 3px dashed #666;">
+          <div style="position: absolute; top: 10px; left: 20px; background: rgba(255,255,255,0.9); padding: 5px 15px; border-radius: 20px; font-weight: bold; color: #333; font-size: 0.9em;">
+            ID: ${pass.id || 'N/A'}
+          </div>
+          <div style="position: absolute; top: 10px; right: 20px; width: 80px; height: 80px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2em; color: #4CAF50; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">
+            <i class="fas fa-bus"></i>
+          </div>
+          <div style="font-size: 1.8em; font-weight: bold; color: #333; margin-bottom: 5px; text-transform: uppercase; margin-top: 30px;">
+            TSRTC Road Pass
+          </div>
+          <div style="font-size: 1em; color: #555; font-weight: 600;">
+            Telangana State Road Transport Corporation
+          </div>
+        </div>
+
+        <!-- Government Stamp Watermark - Centered and Visible -->
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); opacity: 0.15; z-index: 1; pointer-events: none;">
+          <div style="width: 200px; height: 200px; border: 8px solid #e91e63; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.3);">
+            <div style="font-size: 40px; margin-bottom: 8px;">🏛️</div>
+            <div style="font-size: 14px; font-weight: bold; color: #e91e63; text-align: center; line-height: 1.2;">
+              GOVERNMENT OF<br>TELANGANA<br>TSRTC<br>AUTHORIZED
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticket Body -->
+        <div style="padding: 25px; background: white; position: relative; z-index: 2;">
+          <!-- Passenger Information -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+            <div style="border-left: 3px solid #4CAF50; padding-left: 15px;">
+              <div style="font-size: 0.85em; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Passenger Name</div>
+              <div style="font-size: 1.1em; color: #333; font-weight: bold;">${userName}</div>
+            </div>
+            <div style="border-left: 3px solid #4CAF50; padding-left: 15px;">
+              <div style="font-size: 0.85em; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Pass Type</div>
+              <div style="font-size: 1.1em; color: #333; font-weight: bold;">${pass.type}</div>
+            </div>
+            <div style="border-left: 3px solid #4CAF50; padding-left: 15px;">
+              <div style="font-size: 0.85em; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Ticket No</div>
+              <div style="font-size: 1.1em; color: #333; font-weight: bold;">${pass.id || 'N/A'}</div>
+            </div>
+            <div style="border-left: 3px solid #4CAF50; padding-left: 15px;">
+              <div style="font-size: 0.85em; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Amount</div>
+              <div style="font-size: 1.1em; color: #333; font-weight: bold;">${pass.price}</div>
+            </div>
+            <div style="border-left: 3px solid #4CAF50; padding-left: 15px;">
+              <div style="font-size: 0.85em; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Issue Date</div>
+              <div style="font-size: 1.1em; color: #333; font-weight: bold;">${purchaseDate.toLocaleDateString('en-IN')}</div>
+            </div>
+            <div style="border-left: 3px solid #4CAF50; padding-left: 15px;">
+              <div style="font-size: 0.85em; color: #666; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Valid Until</div>
+              <div style="font-size: 1.1em; color: #333; font-weight: bold;">${expiryDate.toLocaleDateString('en-IN')}</div>
+            </div>
+          </div>
+
+          <!-- Route Information -->
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #e9ecef;">
+            <div style="font-size: 0.9em; color: #666; text-transform: uppercase; margin-bottom: 10px; font-weight: 600;">Journey Route</div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div style="flex: 1; text-align: center;">
+                <div style="font-size: 0.75em; color: #666; margin-bottom: 5px;">FROM</div>
+                <div style="font-size: 1em; font-weight: bold; color: #333;">${pickup}</div>
+              </div>
+              <div style="font-size: 1.5em; color: #4CAF50;">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+              <div style="flex: 1; text-align: center;">
+                <div style="font-size: 0.75em; color: #666; margin-bottom: 5px;">TO</div>
+                <div style="font-size: 1em; font-weight: bold; color: #333;">${dropoff}</div>
+              </div>
+            </div>
+            ${pass.distance ? `
+              <div style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9em;">
+                <i class="fas fa-road"></i> Distance: ${pass.distance} km
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- QR Code Section -->
+          <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px;">
+            <div style="font-size: 0.9em; color: #666; font-weight: 600; margin-bottom: 10px;">SCAN QR CODE</div>
+            <div style="width: 120px; height: 120px; margin: 0 auto 10px auto; background: white; border: 3px solid #e91e63; border-radius: 10px; padding: 5px;">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=http://localhost:5000" alt="QR Code" style="width: 100%; height: 100%; display: block;">
+            </div>
+            <div style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Visit Smart Bus Portal</div>
+            <div style="display: inline-block; padding: 8px 20px; border-radius: 25px; font-weight: bold; font-size: 0.9em; margin-top: 10px; ${
+              validityBadgeClass === 'active' ? 'background: #d4edda; color: #155724; border: 2px solid #c3e6cb;' :
+              validityBadgeClass === 'expired' ? 'background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb;' :
+              'background: #fff3cd; color: #856404; border: 2px solid #ffeaa7;'
+            }">
+              <i class="fas fa-${validityBadgeClass === 'active' ? 'check-circle' : validityBadgeClass === 'expired' ? 'times-circle' : 'exclamation-triangle'}"></i>
+              ${validityText}
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="downloadTSRTCTicket('${pass.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; background: #4CAF50; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fas fa-download"></i> Download
+            </button>
+            <button onclick="sharePassReceipt('${pass.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; background: #2196F3; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fas fa-share-alt"></i> Share
+            </button>
+            ${daysRemaining <= 7 && daysRemaining >= 0 ? `
+              <button onclick="renewPassFromDashboard('${pass.id}')" style="flex: 1; padding: 12px; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; background: #ff9800; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-refresh"></i> Renew
+              </button>
+            ` : ''}
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #ddd; font-size: 0.8em; color: #666;">
+            <p><strong>TSRTC Customer Care:</strong> 040-23450033</p>
+            <p>This is a computer-generated pass. No signature required.</p>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    function viewTSRTCTicketFull(passId) {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const pass = userPasses.find(p => p.id == passId);
+      
+      if (!pass) {
+        console.log('⚠️ Pass not found, reloading from backend...');
+        // Try to reload from backend
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          fetch(`/get-user-passes/${encodeURIComponent(userEmail)}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                localStorage.setItem('userPasses', JSON.stringify(data.passes));
+                const foundPass = data.passes.find(p => p.id == passId);
+                if (foundPass) {
+                  openTSRTCTicketWindow(foundPass);
+                }
+              }
+            });
+        }
+        return;
+      }
+
+      openTSRTCTicketWindow(pass);
+    }
+
+    function openTSRTCTicketWindow(pass) {
+      const userName = localStorage.getItem('userName') || 'Passenger';
+      const userEmail = localStorage.getItem('userEmail') || '';
+
+      // Open TSRTC ticket in new window
+      const ticketWindow = window.open('', '_blank', 'width=850,height=600');
+      ticketWindow.document.write(generateTSRTCTicketHTML(pass, userName, userEmail));
+      ticketWindow.document.close();
+    }
+
+    function downloadTSRTCTicket(passId) {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const pass = userPasses.find(p => p.id == passId);
+      
+      if (!pass) return;
+
+      const userName = localStorage.getItem('userName') || 'Passenger';
+      const userEmail = localStorage.getItem('userEmail') || '';
+
+      // Open ticket for download/print
+      const ticketWindow = window.open('', '_blank', 'width=850,height=600');
+      ticketWindow.document.write(generateTSRTCTicketHTML(pass, userName, userEmail));
+      ticketWindow.document.close();
+      
+      // Auto-trigger print dialog after a short delay
+      setTimeout(() => {
+        ticketWindow.print();
+      }, 500);
+    }
+
+    function generateTSRTCTicketHTML(pass, userName, userEmail) {
+      const expiryDate = new Date(pass.expiryDate);
+      const purchaseDate = new Date(pass.purchaseDate);
+      const routeParts = pass.route ? pass.route.split('→') : ['', ''];
+      const pickup = routeParts[0]?.trim() || 'Any Location';
+      const dropoff = routeParts[1]?.trim() || 'Any Location';
+      
+      return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSRTC Bus Pass - ${pass.type}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .pass-container {
+            background: white;
+            width: 800px;
+            height: 500px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .pass-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ffb6d9 0%, #ffc0e0 25%, #d4f1d4 50%, #b8e6b8 75%, #ffb6d9 100%);
+            opacity: 0.3;
+        }
+        .govt-stamp {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            opacity: 0.25;
+            z-index: 1;
+        }
+        .stamp-circle {
+            width: 250px;
+            height: 250px;
+            border: 10px solid #e91e63;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .stamp-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e91e63;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .stamp-emblem { font-size: 50px; margin-bottom: 10px; }
+        .pass-content {
+            position: relative;
+            z-index: 2;
+            padding: 60px 40px 40px 40px;
+            height: 100%;
+        }
+        .tsrtc-header { text-align: right; margin-bottom: 20px; }
+        .pass-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 2px;
+        }
+        .tsrtc-logo { font-size: 32px; font-weight: bold; color: #e91e63; }
+        .tsrtc-subtitle { font-size: 14px; color: #666; }
+        .pass-type {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .pass-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .detail-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .detail-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .detail-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+        .route-section {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .route-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .route-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e91e63;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+        }
+        .qr-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .qr-code {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #e91e63;
+            border-radius: 8px;
+            padding: 5px;
+            background: white;
+        }
+        .qr-description {
+            font-size: 10px;
+            color: #999;
+            margin-top: 5px;
+        }
+        .footer-text {
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            margin-top: 15px;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .pass-container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="pass-container">
+        <div class="pass-background"></div>
+        <div class="govt-stamp">
+            <div class="stamp-circle">
+                <div class="stamp-emblem">🏛️</div>
+                <div class="stamp-text">
+                    GOVERNMENT OF<br>TELANGANA<br>TSRTC<br>AUTHORIZED
+                </div>
+            </div>
+        </div>
+        <div class="pass-content">
+            <div class="tsrtc-header">
+                <div class="pass-number">${pass.id}</div>
+                <div class="tsrtc-logo">TSRTC</div>
+                <div class="tsrtc-subtitle">Telangana State Road Transport Corporation</div>
+            </div>
+            <div class="pass-type">${pass.type}</div>
+            <div class="pass-details">
+                <div class="detail-item">
+                    <div class="detail-label">Passenger Name</div>
+                    <div class="detail-value">${userName}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value">${userEmail}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Distance</div>
+                    <div class="detail-value">${pass.distance || '0'} km</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Amount Paid</div>
+                    <div class="detail-value">${pass.price}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Purchase Date</div>
+                    <div class="detail-value">${purchaseDate.toLocaleDateString()}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Valid Until</div>
+                    <div class="detail-value">${expiryDate.toLocaleDateString()}</div>
+                </div>
+            </div>
+            <div class="route-section">
+                <div class="route-label">Route</div>
+                <div class="route-value">${pickup} → ${dropoff}</div>
+            </div>
+            <div class="qr-section">
+                <div class="qr-label">Scan QR Code</div>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=http://localhost:5000" 
+                     alt="QR Code" class="qr-code">
+                <div class="qr-description">Visit Smart Bus Portal</div>
+            </div>
+            <div class="footer-text">
+                This is a computer-generated pass. Valid only with proper identification.<br>
+                For queries: support@tsrtc.telangana.gov.in | Helpline: 040-23450033
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+      `;
+    }
+
+    function showNoTSRTCTickets() {
+      document.getElementById('tsrtcTicketsGrid').style.display = 'none';
+      document.getElementById('noTsrtcTickets').style.display = 'block';
+    }
+
+    // Auto-check for expiry notifications every time dashboard loads
+    function checkAndAddExpiryNotifications() {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const userEmail = localStorage.getItem('userEmail');
+      const now = new Date();
+      const existingNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      
+      if (!userEmail) {
+        console.log('⚠️ No user email found for expiry notifications');
+        return;
+      }
+      
+      let newNotifications = [];
+      
+      userPasses.forEach(pass => {
+        const expiryDate = new Date(pass.expiryDate);
+        const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+        
+        // Check if we already sent notification for this pass and day count
+        const notificationKey = `${pass.id}_${daysUntilExpiry}`;
+        const alreadyNotified = existingNotifications.some(n => n.key === notificationKey);
+        
+        // Send notification for passes expiring in 7, 3, 1 days or already expired
+        if (!alreadyNotified && ([7, 3, 1].includes(daysUntilExpiry) || daysUntilExpiry <= 0)) {
+          let urgency, title, message, icon;
+          
+          if (daysUntilExpiry <= 0) {
+            urgency = 'critical';
+            title = '🚨 Pass EXPIRED';
+            message = `Your ${pass.type} has EXPIRED! Renew immediately to continue using Smart Bus services.`;
+            icon = 'fa-times-circle';
+          } else if (daysUntilExpiry === 1) {
+            urgency = 'critical';
+            title = '🚨 Pass Expires Tomorrow';
+            message = `Your ${pass.type} expires in 24 hours! Renew now to avoid service interruption.`;
+            icon = 'fa-exclamation-triangle';
+          } else if (daysUntilExpiry <= 3) {
+            urgency = 'high';
+            title = '⚠️ Pass Expiring Soon';
+            message = `Your ${pass.type} expires in ${daysUntilExpiry} days. Renew now to ensure uninterrupted service.`;
+            icon = 'fa-exclamation-circle';
+          } else {
+            urgency = 'medium';
+            title = '📢 Pass Renewal Reminder';
+            message = `Your ${pass.type} expires in ${daysUntilExpiry} days. Consider renewing soon.`;
+            icon = 'fa-bell';
+          }
+          
+          const newNotification = {
+            id: Date.now() + Math.random(),
+            key: notificationKey,
+            type: 'expiry',
+            urgency: urgency,
+            title: title,
+            message: message,
+            icon: icon,
+            passId: pass.id,
+            passType: pass.type,
+            daysUntilExpiry: daysUntilExpiry,
+            expiryDate: pass.expiryDate,
+            date: new Date().toISOString(),
+            read: false
+          };
+          
+          existingNotifications.unshift(newNotification);
+          newNotifications.push(newNotification);
+          
+          // Send email notification
+          sendExpiryEmailNotification(pass, daysUntilExpiry);
+        }
+      });
+      
+      // Save updated notifications
+      localStorage.setItem('notifications', JSON.stringify(existingNotifications));
+      
+      // Show browser notification if new critical notifications
+      if (newNotifications.length > 0) {
+        const criticalNotifications = newNotifications.filter(n => n.urgency === 'critical');
+        if (criticalNotifications.length > 0) {
+          showBrowserNotification(criticalNotifications[0]);
+        }
+      }
+      
+      console.log(`✅ Expiry check complete: ${newNotifications.length} new notifications created`);
+    }
+
+    function sendExpiryEmailNotification(pass, daysUntilExpiry) {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) return;
+
+      // Send to Flask backend to send email
+      fetch('/send-expiry-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          passType: pass.type,
+          passId: pass.id,
+          daysUntilExpiry: daysUntilExpiry,
+          expiryDate: pass.expiryDate
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log(`✅ Email notification sent for ${pass.type} (${daysUntilExpiry} days)`);
+        } else {
+          console.log(`❌ Email notification failed: ${data.error}`);
+        }
+      })
+      .catch(error => {
+        console.log('❌ Email notification request failed:', error);
+      });
+    }
+
+    function showBrowserNotification(notification) {
+      // Check if browser supports notifications
+      if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notifications");
+        return;
+      }
+
+      // Check if permission is granted
+      if (Notification.permission === "granted") {
+        createNotification(notification);
+      } else if (Notification.permission !== "denied") {
+        // Request permission
+        Notification.requestPermission().then(function (permission) {
+          if (permission === "granted") {
+            createNotification(notification);
+          }
+        });
+      }
+    }
+
+    function createNotification(notification) {
+      const options = {
+        body: notification.message,
+        icon: '/static/Smartbus_logo_(1).jpg',
+        badge: '/static/Smartbus_logo_(1).jpg',
+        tag: `pass-expiry-${notification.passId}`,
+        requireInteraction: notification.urgency === 'critical',
+        vibrate: [200, 100, 200]
+      };
+
+      const browserNotification = new Notification(notification.title, options);
+
+      browserNotification.onclick = function() {
+        window.focus();
+        showSection('my-passes');
+        this.close();
+      };
+    }
+
+    // Periodic expiry check (every 30 minutes)
+    function startExpiryMonitoring() {
+      // Initial check
+      checkAndAddExpiryNotifications();
+      
+      // Check every 30 minutes
+      setInterval(() => {
+        console.log('🔄 Running periodic expiry check...');
+        checkAndAddExpiryNotifications();
+      }, 30 * 60 * 1000); // 30 minutes
+    }
+  </script>
+    <script>
+
+  </script>
+  <script>
+  function loadSidebarNotification() {
+    const note = localStorage.getItem('smartbus_notification');
+    if (note) {
+      const box = document.getElementById('sidebarNotification');
+      box.textContent = note;
+      box.style.display = 'block';
+    }
+  }
+
+  window.onload = loadSidebarNotification;
+</script>
+
+  <script>
+    // Store user email from backend session
+    const backendEmail = "{{ user_email|default('') }}";
+    if (backendEmail && backendEmail !== 'None' && backendEmail !== '') {
+      localStorage.setItem('userEmail', backendEmail);
+      console.log('✅ User email stored in localStorage:', backendEmail);
+    }
+    
+    const backendName = "{{ user_name|default('') }}";
+    if (backendName && backendName !== 'None' && backendName !== '') {
+      localStorage.setItem('userName', backendName);
+      console.log('✅ User name stored in localStorage:', backendName);
+    }
+
+    // Load user data and check pass purchase history
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if coming from successful payment
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromPayment = urlParams.get('payment') === 'success';
+      
+      if (fromPayment) {
+        console.log('🎉 Redirected from successful payment!');
+        console.log('🔄 Clearing localStorage to force fresh data load...');
+        // Clear localStorage to force fresh load
+        localStorage.removeItem('userPasses');
+        // Remove the parameter from URL
+        window.history.replaceState({}, document.title, '/dashboard');
+        
+        // Show success notification
+        setTimeout(() => {
+          showNotification('Payment Successful! Your new pass is now active.', 'success');
+          
+          // Force reload passes from backend
+          const userEmail = localStorage.getItem('userEmail');
+          if (userEmail) {
+            console.log('🔄 Force reloading passes from backend after payment...');
+            loadPassesFromBackend(userEmail);
+          }
+        }, 500);
+      }
+      
+      const name = localStorage.getItem("userName");
+      const email = localStorage.getItem("userEmail");
+
+      if (name && email) {
+        // Track dashboard visit
+        fetch('/api/track', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            action: 'dashboard_visit'
+          })
+        }).catch(error => console.log('Tracking failed:', error));
+
+        // LOAD PASSES FROM BACKEND FIRST (to restore after logout)
+        loadPassesFromBackend(email);
+
+        // Immediately update profile UI with localStorage data
+        updateProfileUI(name, email);
+        
+        // Load profile information from database (this will update with any additional data)
+        loadProfileFromDatabase(email);
+        
+        // Set member since date (use registration date if available, otherwise current date)
+        const memberSince = localStorage.getItem("memberSince") || new Date().toLocaleDateString();
+        const memberSinceEl = document.getElementById("memberSince");
+        if (memberSinceEl) memberSinceEl.value = memberSince;
+        
+        // Calculate total passes
+        const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+        const totalPassesEl = document.getElementById("totalPasses");
+        if (totalPassesEl) totalPassesEl.value = userPasses.length.toString();
+        
+        // Check if user has purchased passes
+        checkUserPasses();
+        
+        // IMPORTANT: Start expiry monitoring system
+        console.log('🔔 Starting pass expiry monitoring system...');
+        startExpiryMonitoring();
+        
+        // Load notifications from backend
+        loadNotifications(email);
+        
+        // IMPORTANT: Load passes immediately on dashboard load
+        // This ensures newly purchased passes show up with expiry dates
+        loadPassesQuickView();
+        
+        // Check if user just completed a payment (coming from payment page)
+        const justPurchased = sessionStorage.getItem('justPurchasedPass');
+        const showTSRTCTicket = sessionStorage.getItem('showTSRTCTicket');
+        const newPassId = sessionStorage.getItem('newPassId');
+
+        if (justPurchased === 'true' || fromPayment) {
+          console.log('🎉 User just purchased a pass - auto-showing new pass content');
+          sessionStorage.removeItem('justPurchasedPass');
+          if (showTSRTCTicket === 'true') {
+            sessionStorage.removeItem('showTSRTCTicket');
+          }
+          if (newPassId) {
+            sessionStorage.removeItem('newPassId');
+          }
+
+          setTimeout(() => {
+            if (showTSRTCTicket === 'true') {
+              showSection('tsrtc-tickets');
+              showNotification('✅ Pass purchased successfully! Your TSRTC ticket is ready to view.', 'success');
+            } else {
+              showSection('my-passes');
+              showNotification('✅ Pass purchased successfully! Your pass is now active and available in My Passes.', 'success');
+            }
+          }, 700);
+        }
+        
+        // Check if we should show buy-pass section (from renewal)
+        const showBuyPass = "{{ 'true' if show_buy_pass else 'false' }}" === "true";
+        if (showBuyPass) {
+          showSection('buy-pass');
+          showRenewalSuccessMessage();
+        }
+        
+        // Ensure pass selection is ready
+        setTimeout(() => {
+          console.log('✅ Dashboard fully loaded - pass selection ready');
+          enablePassSelectionButtons();
+        }, 1000);
+        
+      } else {
+        console.log('❌ No user session found, redirecting to login...');
+        window.location.href = "/"; // Flask route for index.html
+      }
+    });
+
+    function loadPassesFromBackend(email) {
+      console.log('🔄 Loading passes from backend for:', email);
+      
+      fetch(`/get-user-passes/${encodeURIComponent(email)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.passes.length > 0) {
+            console.log(`✅ Loaded ${data.passes.length} passes from backend`);
+            
+            // Store in localStorage
+            localStorage.setItem('userPasses', JSON.stringify(data.passes));
+            
+            // Refresh display
+            loadPassesQuickView();
+            checkUserPasses();
+          } else {
+            console.log('ℹ️ No passes found in backend for this user');
+          }
+        })
+        .catch(error => {
+          console.log('❌ Failed to load passes from backend:', error);
+        });
+    }
+
+    function showRenewalSuccessMessage() {
+      const message = "{{ success_message|default('') }}";
+      if (message) {
+        showNotification('✅ ' + message, 'success');
+        
+        // Add a renewal indicator to the buy-pass section
+        const buyPassSection = document.getElementById('buy-pass');
+        if (buyPassSection) {
+          const renewalBanner = document.createElement('div');
+          renewalBanner.style.cssText = `
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+          `;
+          renewalBanner.innerHTML = `
+            <i class="fas fa-sync-alt" style="margin-right: 10px;"></i>
+            <strong>Pass Renewal Mode</strong> - Select a new pass to complete your renewal
+          `;
+          
+          const sectionHeader = buyPassSection.querySelector('.section-header');
+          if (sectionHeader) {
+            sectionHeader.insertAdjacentElement('afterend', renewalBanner);
+          }
+        }
+      }
+    }
+
+    function updateProfileUI(name, email) {
+      // Update all profile-related UI elements immediately
+      const elements = {
+        "userName": name,
+        "userEmail": email,
+        "userAvatar": name.charAt(0).toUpperCase(),
+        "profileName": name,
+        "profileEmail": email,
+        "profileAvatar": name.charAt(0).toUpperCase(),
+        "profileFullNameField": name,
+        "profileEmailField": email
+      };
+
+      Object.keys(elements).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+            element.value = elements[id];
+          } else {
+            element.textContent = elements[id];
+          }
+        }
+      });
+
+      // Ensure all fields are disabled initially
+      disableAllProfileFields();
+
+      console.log('✅ Profile UI updated immediately with:', { name, email });
+    }
+
+    function disableAllProfileFields() {
+      const fields = ['profilePhoneField', 'profileCityField', 'profileAddressField'];
+      fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.readOnly = true;
+          field.classList.remove('enabled');
+          field.classList.add('disabled');
+        }
+      });
+
+      // Show edit button, hide save/cancel buttons
+      document.getElementById('editProfileBtn').style.display = 'flex';
+      document.getElementById('saveProfileBtn').style.display = 'none';
+      document.getElementById('cancelProfileBtn').style.display = 'none';
+    }
+
+    function enableProfileEdit() {
+      const fields = ['profilePhoneField', 'profileCityField', 'profileAddressField'];
+      fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.readOnly = false;
+          field.classList.remove('disabled');
+          field.classList.add('enabled');
+        }
+      });
+
+      // Store original values for cancel functionality
+      window.originalProfileValues = {
+        phone: document.getElementById('profilePhoneField').value,
+        city: document.getElementById('profileCityField').value,
+        address: document.getElementById('profileAddressField').value
+      };
+
+      // Hide edit button, show save/cancel buttons
+      document.getElementById('editProfileBtn').style.display = 'none';
+      document.getElementById('saveProfileBtn').style.display = 'flex';
+      document.getElementById('cancelProfileBtn').style.display = 'flex';
+
+      // Focus on first editable field
+      document.getElementById('profilePhoneField').focus();
+
+      showNotification('📝 Profile editing enabled. Make your changes and click Save.', 'info');
+    }
+
+    function cancelProfileEdit() {
+      // Restore original values
+      if (window.originalProfileValues) {
+        document.getElementById('profilePhoneField').value = window.originalProfileValues.phone;
+        document.getElementById('profileCityField').value = window.originalProfileValues.city;
+        document.getElementById('profileAddressField').value = window.originalProfileValues.address;
+      }
+
+      // Disable all fields
+      disableAllProfileFields();
+
+      showNotification('❌ Changes cancelled. Profile restored to original values.', 'info');
+    }
+
+    function loadProfileFromDatabase(email) {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
+      fetch(`/get_profile?email=${encodeURIComponent(email)}`, {
+        signal: controller.signal
+      })
+        .then(response => {
+          clearTimeout(timeoutId);
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            const profileData = data.data;
+            
+            // Update profile section QUICKLY
+            const profilePhoneField = document.getElementById("profilePhoneField");
+            const profileCityField = document.getElementById("profileCityField");
+            const profileAddressField = document.getElementById("profileAddressField");
+            
+            if (profilePhoneField) profilePhoneField.value = profileData.phone || '';
+            if (profileCityField) profileCityField.value = profileData.city || '';
+            if (profileAddressField) profileAddressField.value = profileData.address || '';
+            
+            // Ensure fields are disabled after loading
+            disableAllProfileFields();
+            
+            console.log('✅ Profile loaded quickly from database');
+          } else {
+            console.log('❌ Database load failed, using localStorage data');
+            disableAllProfileFields();
+          }
+        })
+        .catch(error => {
+          clearTimeout(timeoutId);
+          console.log('❌ Profile load timeout/error, using localStorage data');
+          disableAllProfileFields();
+        });
+    }
+
+    function saveProfileChanges() {
+      const email = localStorage.getItem("userEmail");
+      const phone = document.getElementById("profilePhoneField").value.trim();
+      const city = document.getElementById("profileCityField").value.trim();
+      const address = document.getElementById("profileAddressField").value.trim();
+      
+      console.log('=== PROFILE SAVE DEBUG ===');
+      console.log('Email:', email);
+      console.log('Phone:', phone);
+      console.log('City:', city);
+      console.log('Address:', address);
+      
+      if (!email) {
+        showNotification('❌ User email not found. Please log in again.', 'error');
+        return;
+      }
+
+      // Validate mandatory fields
+      const validationErrors = [];
+      
+      if (!phone) {
+        validationErrors.push('Phone Number is required');
+      } else if (!/^[0-9]{10}$/.test(phone.replace(/\s+/g, ''))) {
+        validationErrors.push('Phone Number must be exactly 10 digits');
+      }
+      
+      if (!city) {
+        validationErrors.push('City is required');
+      } else if (city.length < 2) {
+        validationErrors.push('City must be at least 2 characters');
+      }
+      
+      if (!address) {
+        validationErrors.push('Address is required');
+      } else if (address.length < 10) {
+        validationErrors.push('Address must be at least 10 characters');
+      }
+
+      // Show validation errors if any
+      if (validationErrors.length > 0) {
+        const errorMessage = 'Please fix the following errors:\n• ' + validationErrors.join('\n• ');
+        showValidationModal(errorMessage);
+        return;
+      }
+
+      // Show confirmation dialog before saving
+      showConfirmationModal(
+        'Save Profile Changes',
+        `Are you sure you want to save these changes?\n\nPhone: ${phone}\nCity: ${city}\nAddress: ${address}`,
+        () => {
+          // User confirmed, proceed with save
+          const profileData = {
+            email: email,
+            phone: phone,
+            city: city,
+            address: address
+          };
+
+          console.log('Sending profile data:', profileData);
+
+          fetch('/update_profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(profileData)
+          })
+          .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+          })
+          .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+              showNotification('✅ Profile updated successfully!', 'success');
+              console.log('✅ Profile updated:', data);
+              
+              // Disable fields after successful save
+              disableAllProfileFields();
+              
+              // Clear original values
+              delete window.originalProfileValues;
+              
+            } else {
+              showNotification('❌ Failed to update profile: ' + data.error, 'error');
+              console.log('❌ Profile update failed:', data.error);
+            }
+          })
+          .catch(error => {
+            console.error('Error updating profile:', error);
+            showNotification('❌ Network error. Please check your connection and try again.', 'error');
+          });
+        }
+      );
+    }
+
+    function showValidationModal(message) {
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      `;
+      
+      modal.innerHTML = `
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 15px;
+          max-width: 400px;
+          width: 90%;
+          text-align: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+          <div style="color: #f44336; font-size: 3em; margin-bottom: 15px;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h3 style="color: #333; margin-bottom: 15px;">Validation Error</h3>
+          <p style="color: #666; white-space: pre-line; text-align: left; margin-bottom: 20px;">${message}</p>
+          <button onclick="this.closest('.modal').remove()" style="
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+          ">OK</button>
+        </div>
+      `;
+      
+      modal.className = 'modal';
+      document.body.appendChild(modal);
+    }
+
+    function showConfirmationModal(title, message, onConfirm) {
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      `;
+      
+      modal.innerHTML = `
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 15px;
+          max-width: 400px;
+          width: 90%;
+          text-align: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+          <div style="color: #4CAF50; font-size: 3em; margin-bottom: 15px;">
+            <i class="fas fa-question-circle"></i>
+          </div>
+          <h3 style="color: #333; margin-bottom: 15px;">${title}</h3>
+          <p style="color: #666; white-space: pre-line; text-align: left; margin-bottom: 20px;">${message}</p>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="this.closest('.modal').remove()" style="
+              background: #ccc;
+              color: #333;
+              border: none;
+              padding: 12px 25px;
+              border-radius: 25px;
+              cursor: pointer;
+              font-weight: bold;
+            ">Cancel</button>
+            <button onclick="confirmSave()" style="
+              background: #4CAF50;
+              color: white;
+              border: none;
+              padding: 12px 25px;
+              border-radius: 25px;
+              cursor: pointer;
+              font-weight: bold;
+            ">Save Changes</button>
+          </div>
+        </div>
+      `;
+      
+      modal.className = 'modal';
+      document.body.appendChild(modal);
+      
+      // Store the callback function globally so the button can access it
+      window.confirmSave = () => {
+        modal.remove();
+        onConfirm();
+        delete window.confirmSave;
+      };
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-size: 14px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        max-width: 300px;
+      `;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 4000);
+    }
+
+    function checkUserPasses() {
+      // Get user's pass purchase history from localStorage
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const userStats = JSON.parse(localStorage.getItem('userStats') || '{}');
+      
+      console.log('User passes:', userPasses);
+      console.log('User stats:', userStats);
+      
+      if (userPasses.length > 0) {
+        // User has passes - show stats and alerts
+        showPassStatistics(userPasses, userStats);
+        document.getElementById('firstTimeMessage').style.display = 'none';
+      } else {
+        // User has no passes - show welcome message
+        hidePassStatistics();
+        document.getElementById('firstTimeMessage').style.display = 'block';
+      }
+    }
+
+    function showPassStatistics(passes, stats) {
+      // Show alert banner
+      const alertBanner = document.getElementById('alertBanner');
+      const summaryCards = document.getElementById('summaryCards');
+      
+      if (alertBanner) {
+        alertBanner.style.display = 'block';
+        
+        // Calculate expiring passes
+        const expiringPasses = calculateExpiringPasses(passes);
+        document.getElementById('expiringCount').textContent = expiringPasses;
+      }
+      
+      if (summaryCards) {
+        summaryCards.style.display = 'flex';
+        
+        // Update statistics
+        const activePasses = passes.filter(pass => pass.status === 'active').length;
+        const totalSpent = stats.totalSpent || calculateTotalSpent(passes);
+        const totalSavings = stats.totalSavings || calculateSavings(passes);
+        
+        document.getElementById('activePasses').textContent = activePasses;
+        document.getElementById('totalSpent').textContent = `₹${totalSpent}`;
+        document.getElementById('totalSavings').textContent = `₹${totalSavings}`;
+      }
+    }
+
+    function hidePassStatistics() {
+      // Hide alert banner and summary cards
+      const alertBanner = document.getElementById('alertBanner');
+      const summaryCards = document.getElementById('summaryCards');
+      
+      if (alertBanner) alertBanner.style.display = 'none';
+      if (summaryCards) summaryCards.style.display = 'none';
+    }
+
+    function calculateExpiringPasses(passes) {
+      const now = new Date();
+      const sevenDaysFromNow = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000));
+      
+      return passes.filter(pass => {
+        if (pass.status !== 'active') return false;
+        const expiryDate = new Date(pass.expiryDate);
+        return expiryDate <= sevenDaysFromNow && expiryDate > now;
+      }).length;
+    }
+
+    function calculateTotalSpent(passes) {
+      return passes.reduce((total, pass) => {
+        const price = parseInt(pass.price.replace('₹', '').replace(',', ''));
+        return total + price;
+      }, 0);
+    }
+
+    function calculateSavings(passes) {
+      // Calculate savings based on pass type vs daily tickets
+      return passes.reduce((total, pass) => {
+        let savings = 0;
+        const price = parseInt(pass.price.replace('₹', '').replace(',', ''));
+        
+        switch(pass.type) {
+          case 'Weekly Pass':
+            savings = (50 * 7) - price; // Daily rate * 7 days - pass price
+            break;
+          case 'Monthly Pass':
+            savings = (50 * 30) - price; // Daily rate * 30 days - pass price
+            break;
+          case 'Student Monthly Pass':
+            savings = (50 * 30) - price; // Same calculation
+            break;
+          case 'Quarterly Pass':
+            savings = (50 * 90) - price; // Daily rate * 90 days - pass price
+            break;
+          case 'Annual Pass':
+            savings = (50 * 365) - price; // Daily rate * 365 days - pass price
+            break;
+          default:
+            savings = 0;
+        }
+        
+        return total + Math.max(0, savings);
+      }, 0);
+    }
+
+    // Function to add a new pass (called when user completes purchase)
+    function addUserPass(passType, price, duration) {
+      const userPasses = JSON.parse(localStorage.getItem('userPasses') || '[]');
+      const now = new Date();
+      const expiryDate = new Date(now);
+      
+      // Calculate expiry date based on pass type
+      switch(passType) {
+        case 'Daily Pass':
+          expiryDate.setDate(now.getDate() + 1);
+          break;
+        case 'Weekly Pass':
+          expiryDate.setDate(now.getDate() + 7);
+          break;
+        case 'Monthly Pass':
+        case 'Student Monthly Pass':
+          expiryDate.setDate(now.getDate() + 30);
+          break;
+        case 'Quarterly Pass':
+          expiryDate.setDate(now.getDate() + 90);
+          break;
+        case 'Annual Pass':
+          expiryDate.setDate(now.getDate() + 365);
+          break;
+      }
+      
+      const newPass = {
+        id: Date.now(),
+        type: passType,
+        price: price,
+        purchaseDate: now.toISOString(),
+        expiryDate: expiryDate.toISOString(),
+        status: 'active'
+      };
+      
+      userPasses.push(newPass);
+      localStorage.setItem('userPasses', JSON.stringify(userPasses));
+      
+      // Update stats
+      const userStats = JSON.parse(localStorage.getItem('userStats') || '{}');
+      userStats.totalSpent = calculateTotalSpent(userPasses);
+      userStats.totalSavings = calculateSavings(userPasses);
+      localStorage.setItem('userStats', JSON.stringify(userStats));
+      
+      // Refresh display
+      checkUserPasses();
+      
+      console.log('✅ Pass added:', newPass);
+    }
+
+    // Expose function globally for testing
+    window.addUserPass = addUserPass;
+
+    // Profile management functions - Email and Full Name are read-only
+    function editProfile() {
+      // Show message that email and full name editing is disabled
+      showNotification('ℹ️ Email and Full Name cannot be edited. You can update Phone, City, and Address.', 'info');
+    }
+
+    function cancelEdit() {
+      // This function is no longer needed since editing is disabled
+      console.log('Cancel edit - not applicable since editing is disabled');
+    }
+
+    function saveProfile() {
+      // This function is no longer needed since editing is disabled
+      console.log('Save profile - not applicable since editing is disabled');
+    }
+
+    function closePasswordModal() {
+      if (window.passwordModal) {
+        document.body.removeChild(window.passwordModal);
+        window.passwordModal = null;
+      }
+    }
+  </script>
+  <script>
+  const name1 = localStorage.getItem("userName");
+
+  if (name1) {
+    const welcomeEl = document.getElementById("welcomeMessage");
+    if (welcomeEl) {
+      welcomeEl.textContent = `Welcome back, ${name1}! 👋`;
+    }
+  } else {
+    console.log('❌ No user name found, redirecting to login...');
+    window.location.href = "/"; // Flask route for index.html
+  }
+</script>
+<script>
+ const name2 = localStorage.getItem("userName");
+const email1 = localStorage.getItem("userEmail");
+
+if (name2 && email1) {
+  const userNameFooterEl = document.getElementById("userNameFooter");
+  const userEmailFooterEl = document.getElementById("userEmailFooter");
+  const userInitialEl = document.getElementById("userInitial");
+  
+  if (userNameFooterEl) userNameFooterEl.textContent = name2;
+  if (userEmailFooterEl) userEmailFooterEl.textContent = email1;
+  if (userInitialEl) userInitialEl.textContent = name2.charAt(0).toUpperCase();
+} else {
+  console.log('❌ No user session found in footer, redirecting to login...');
+  window.location.href = "/"; // Flask route for index.html
+}
+
+function logout() {
+  console.log('🚪 Logging out user...');
+  
+  // Clear all localStorage data
+  localStorage.clear();
+  
+  // Clear any session storage
+  sessionStorage.clear();
+  
+  // Show logout message briefly
+  const logoutMessage = document.createElement('div');
+  logoutMessage.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #4CAF50;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 9999;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  `;
+  logoutMessage.textContent = '✅ Logged out successfully!';
+  document.body.appendChild(logoutMessage);
+  
+  // Redirect to Flask logout route after brief delay
+  setTimeout(() => {
+    console.log('🔄 Redirecting to login page via Flask logout route...');
+    window.location.href = "/logout"; // Flask logout route
+  }, 1000);
+}
+</script>
+<script>
+  window.onload = function() {
+  const message = localStorage.getItem("pendingNotification");
+  if (message) {
+    addNotification(message); // your existing function
+    localStorage.removeItem("pendingNotification");
+  }
+};
+</script>
+
+<script>
+// Load notifications from backend (with localStorage fallback)
+function loadNotifications(userEmail) {
+  fetch(`/get-notifications/${userEmail}`)
+    .then(response => {
+      if (!response.ok) throw new Error('Backend route missing or failed');
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        displayNotifications(data.notifications);
+        updateNotificationBadge(data.unread_count);
+      }
+    })
+    .catch(error => {
+      console.log('Using local notifications fallback:', error.message);
+      const localNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      displayNotifications(localNotifications);
+      const unreadCount = localNotifications.filter(n => !n.read).length;
+      updateNotificationBadge(unreadCount);
+    });
+}
+
+// Display notifications in the dashboard
+function displayNotifications(notifications) {
+  const notificationsList = document.getElementById('notificationsList');
+  const noNotifications = document.getElementById('noNotifications');
+  
+  if (!notificationsList) return;
+  
+  if (notifications.length === 0) {
+    notificationsList.style.display = 'none';
+    if (noNotifications) noNotifications.style.display = 'block';
+    return;
+  }
+  
+  notificationsList.style.display = 'block';
+  if (noNotifications) noNotifications.style.display = 'none';
+  notificationsList.innerHTML = '';
+  
+  notifications.forEach(notification => {
+    const notificationCard = createNotificationCard(notification);
+    notificationsList.appendChild(notificationCard);
+  });
+}
+
+// Create notification card
+function createNotificationCard(notification) {
+  const card = document.createElement('div');
+  card.className = `notification-card ${notification.urgency} ${notification.read ? 'read' : 'unread'}`;
+  card.style.cssText = `
+    background: ${notification.read ? '#f8f9fa' : 'white'};
+    border-left: 4px solid ${getUrgencyColor(notification.urgency)};
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  `;
+  
+  card.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+      <div style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <i class="fas ${getNotificationIcon(notification.type)}" style="color: ${getUrgencyColor(notification.urgency)};"></i>
+          <h4 style="margin: 0; color: #333;">${notification.title}</h4>
+          ${!notification.read ? '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">NEW</span>' : ''}
+        </div>
+        <p style="margin: 0 0 10px 0; color: #666;">${notification.message}</p>
+        <small style="color: #999;">${formatNotificationDate(notification.date)}</small>
+      </div>
+      <button onclick="markAsRead(${notification.id})" style="background: none; border: none; color: #999; cursor: pointer; font-size: 18px;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  `;
+  
+  card.onclick = function() {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+  };
+  
+  return card;
+}
+
+// Get urgency color
+function getUrgencyColor(urgency) {
+  const colors = {
+    'critical': '#f44336',
+    'high': '#ff9800',
+    'medium': '#2196F3',
+    'low': '#4CAF50',
+    'info': '#9C27B0'
+  };
+  return colors[urgency] || colors['info'];
+}
+
+// Get notification icon
+function getNotificationIcon(type) {
+  const icons = {
+    'pass_purchased': 'fa-check-circle',
+    'expiry_warning': 'fa-exclamation-triangle',
+    'expired': 'fa-times-circle',
+    'renewal': 'fa-refresh',
+    'payment': 'fa-credit-card'
+  };
+  return icons[type] || 'fa-bell';
+}
+
+// Format notification date
+function formatNotificationDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+}
+
+// Mark notification as read
+function markAsRead(notificationId) {
+  const userEmail = localStorage.getItem('userEmail');
+  
+  fetch('/mark-notification-read', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: userEmail,
+      notification_id: notificationId
+    })
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Backend route missing or failed');
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      // Reload notifications
+      loadNotifications(userEmail);
+    }
+  })
+  .catch(error => {
+    console.log('Using local notification read fallback:', error.message);
+    let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    const notif = notifications.find(n => n.id === notificationId);
+    if (notif) {
+      notif.read = true;
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+      loadNotifications(userEmail);
+    }
+  });
+}
+
+// Update notification badge
+function updateNotificationBadge(unreadCount) {
+  // Add or update badge on notifications nav item
+  const notificationsNav = document.querySelector('[onclick="showSection(\'notifications\')"]');
+  if (notificationsNav) {
+    const existingBadge = notificationsNav.querySelector('.notification-badge');
+    
+    if (unreadCount > 0) {
+      // Show badge with count
+      if (existingBadge) {
+        existingBadge.textContent = unreadCount;
+      } else {
+        const badge = document.createElement('span');
+        badge.className = 'notification-badge';
+        badge.textContent = unreadCount;
+        badge.style.cssText = `
+          background: #f44336;
+          color: white;
+          border-radius: 50%;
+          padding: 2px 6px;
+          font-size: 11px;
+          font-weight: bold;
+          margin-left: 8px;
+        `;
+        notificationsNav.appendChild(badge);
+      }
+    } else {
+      // Remove badge when no unread notifications
+      if (existingBadge) {
+        existingBadge.remove();
+      }
+    }
+  }
+}
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forgot Password - Smart Bus</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='forgot.css') }}" />
+  <style>
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      border: 1px solid #c3e6cb;
+      animation: fadeIn 0.3s ease-in;
+    }
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      border: 1px solid #f5c6cb;
+      animation: fadeIn 0.3s ease-in;
+    }
+    .info-message {
+      background: #e2e3e5;
+      color: #383d41;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      border: 1px solid #d6d8db;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .email-info {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      border: 1px solid #bbdefb;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <a href="{{ url_for('index') }}" class="back-link">← Back to sign in</a>
+    <h2>Reset your password</h2>
+    <p>Enter your email address and we'll send you a password reset link</p>
+    
+    {% if success %}
+    <div class="success-message">
+      {{ success }}
+    </div>
+    {% endif %}
+    
+    {% if error %}
+    <div class="error-message">
+      {{ error }}
+    </div>
+    {% endif %}
+    
+    {% if info %}
+    <div class="info-message">
+      {{ info }}
+    </div>
+    {% endif %}
+    
+    <div class="email-info">
+      <h4 style="margin: 0 0 10px 0;">📧 How it works:</h4>
+      <ol style="margin: 10px 0 0 20px; padding-left: 0;">
+        <li>Enter your email address below</li>
+        <li>Check your email for a reset link</li>
+        <li>Click the link to set your new password</li>
+        <li>Login with your new password</li>
+      </ol>
+    </div>
+    
+    <form action="{{ url_for('forgot_password') }}" method="POST" id="forgotForm">
+      <label for="email">Email Address:</label>
+      <input type="email" id="email" name="email" placeholder="you@example.com" required />
+      <button type="submit" id="submitBtn">Send Reset Link</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('forgotForm').addEventListener('submit', function(e) {
+      const submitBtn = document.getElementById('submitBtn');
+      const email = document.getElementById('email').value.trim();
+      
+      if (!email) {
+        e.preventDefault();
+        alert('Please enter your email address');
+        return;
+      }
+      
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Please enter a valid email address');
+        return;
+      }
+      
+      // Show loading state
+      submitBtn.textContent = 'Sending reset link...';
+      submitBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
